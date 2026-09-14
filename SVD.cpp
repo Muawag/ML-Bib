@@ -109,8 +109,10 @@ Givens_Matrizen SVD::givens_Iteration(Matrix& m) {
     int i = 0;
     while(true)  {
         for(std::size_t i = 0; i < size.rows - 1; ++i) {
-            double a_r = (i == 0) ? m[0][0] : m[i-1][i];
-            double b_r = (i == 0) ? m[0][1] : m[i-1][i+1];
+            //double a_r = (i == 0) ? m[0][0] : m[i-1][i];
+            //double b_r = (i == 0) ? m[0][1] : m[i-1][i+1];
+            double a_r = m[i][i];
+            double b_r = m[i][i+1];
             Matrix G_R = Matrix::get_Givens(size.rows, i, a_r, b_r).transpose();
             m = m * G_R;
             V = V * G_R;
@@ -133,9 +135,12 @@ Givens_Matrizen SVD::givens_Iteration(Matrix& m) {
 }
 
 SVD_Matrizen SVD::svd(Matrix& m) {
+    std::cout << "svd start" << std::endl;
     Matrix_Size size = m.get_Size();
     Bidiagonalisierte_Matrizen b = bidiagonalize(m);
+    std::cout << "Bidiagonal fertid" << std::endl;
     SVD_Matrizen matricies = get_SVD_From_Bidiagonal(b);
+    std::cout << "nur noch fertigstellen" << std::endl;
     return clean_up_Svd(size,matricies);
 }
 

@@ -131,8 +131,9 @@ int main() {
     csv_matrix.remove_Spalte("species");
     //csv_matrix.print_Matrix();
     Matrix csv_matrix_num(csv_matrix);
-    csv_matrix_num.print_Matrix();
+    //csv_matrix_num.print_Matrix();
     PCA pca;
     Matrix result = pca.train_apply(csv_matrix_num);
     result.print_Matrix();
+    std::cout << "Fertig" << std::endl;
 }
