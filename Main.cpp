@@ -122,4 +122,5 @@ int main() {
     PCA pca;
     Matrix result = pca.train_apply(mat4);
     result.print_Matrix();
+    std::cout << "test github" << std::endl;
 }
