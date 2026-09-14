@@ -24,6 +24,7 @@ template<typename T>
 class TypedSpalte : public Spalte {
     public:
         TypedSpalte() = default;
+        explicit TypedSpalte(const std::vector<T>& daten) : daten_(daten) {} 
         explicit TypedSpalte(std::vector<T>&& daten) : daten_(std::move(daten)) {}
         explicit TypedSpalte(std::size_t size) : daten_(size) {}
         std::string typName() const override { return typeid(T).name(); }
@@ -186,4 +187,11 @@ class TypedSpalte : public Spalte {
         }
     private:
         std::vector<T> daten_;
+};
+
+enum class Column_Type {
+    Bool, 
+    Int, 
+    Double, 
+    String
 };

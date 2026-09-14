@@ -5,6 +5,7 @@
 #include "Matrix.h"
 #include "SVD.h"
 #include "PCA.h"
+#include "CSVLoader.h"
 
 
 int main() {
@@ -119,10 +120,19 @@ int main() {
     {3.1, 3.0},
     {2.3, 2.7}
     };
-    Matrix pca_matrix(pca_vector);
+    /*Matrix pca_matrix(pca_vector);
     PCA pca;
     Matrix result = pca.train_apply(mat4);
     result.print_Matrix();
     std::cout << "test github" << std::endl;
-    std::cout << "test Github lap" << std::endl;
+    std::cout << "test Github lap" << std::endl;*/
+    DataMatrix csv_matrix = CSVLoader::load_CSV("iris.csv");
+    //csv_matrix.print_Matrix();
+    csv_matrix.remove_Spalte("species");
+    //csv_matrix.print_Matrix();
+    Matrix csv_matrix_num(csv_matrix);
+    csv_matrix_num.print_Matrix();
+    PCA pca;
+    Matrix result = pca.train_apply(csv_matrix_num);
+    result.print_Matrix();
 }
