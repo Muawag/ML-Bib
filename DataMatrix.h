@@ -56,7 +56,7 @@ class DataMatrix {
             spaltenCount_++;
             return true;
         }
-        bool remove_Spalte(const std::string& name); 
+        DataMatrix remove_Spalte(const std::string& name); 
         void show_Spalten_info() const;
         void print_Matrix() const;
         bool only_Numbers() const;

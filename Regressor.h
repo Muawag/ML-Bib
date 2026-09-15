@@ -8,7 +8,7 @@
 class Regressor {
     public:
         virtual void train(const Matrix& x_daten, const Matrix& y_daten) = 0;
-        virtual std::vector<double> predict(const Matrix& predict_daten) const = 0;
+        virtual Matrix predict(const Matrix& predict_daten) const = 0;
         
         private:
 };

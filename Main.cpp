@@ -6,6 +6,7 @@
 #include "SVD.h"
 #include "PCA.h"
 #include "CSVLoader.h"
+#include "LinearRegression.h"
 
 
 int main() {
@@ -51,7 +52,8 @@ int main() {
     //d.print_Matrix();
     //std::cout << d.get_sum<double>(3) << std::endl;
     //std::cout << d.get_mean<double>("test") << std::endl;
-    d.remove_Spalte("Spalte2");
+    DataMatrix d_neu = d.remove_Spalte("Spalte2");
+    d_neu.print_Matrix();
     NumberDataMatrix num_Matrix(d);
     NumberDataMatrix num2 = num_Matrix.transpose();
     NumberDataMatrix num3 = num_Matrix * num2;
@@ -125,7 +127,7 @@ int main() {
     Matrix result = pca.train_apply(mat4);
     result.print_Matrix();
     std::cout << "test github" << std::endl;
-    std::cout << "test Github lap" << std::endl;*/
+    std::cout << "test Github lap" << std::endl;
     DataMatrix csv_matrix = CSVLoader::load_CSV("iris.csv");
     //csv_matrix.print_Matrix();
     csv_matrix.remove_Spalte("species");
@@ -140,5 +142,12 @@ int main() {
     Q.print_Matrix();
     R.print_Matrix();
     Matrix testA = Q * R;
-    testA.print_Matrix();
+    testA.print_Matrix();*/
+    Matrix x_daten({{1, 1}, {1, 2}, {1, 3}});
+    Matrix y_daten({{3}, {5}, {7}});
+    LinearRegression lin;
+    lin.train(x_daten, y_daten);
+    Matrix x_test({{1, 4}, {1, 5}});
+    auto predictions = lin.predict(x_test);
+    predictions.print_Matrix();
 }

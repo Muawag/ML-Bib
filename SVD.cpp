@@ -192,8 +192,6 @@ Q_R_Matrizen SVD::q_r_Decomposition(const Matrix& matrix) {
         q_Matricies.push_back(Q_n);
         rows.push_back(m_neu[0]);
         m = m_neu.drop_Zeile(0).drop_Spalte(0);
-        Q_n.print_Matrix();
-        m_neu.print_Matrix();
     }
     Matrix Q = get_Matrix_From_Smaller(matrix.get_Size().rows, q_Matricies);
     Matrix R = Matrix::get_Upper_Trig_From_Vec(rows, matrix.get_Size());

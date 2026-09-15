@@ -1,6 +1,7 @@
 #include "DataMatrix.h"
 #include <set>
 #include "NumberDataMatrix.h"
+#include <stdexcept>
 
 bool check_Spalten_size(const std::vector<std::unique_ptr<Spalte>>& vec, std::size_t anzahl) {
     for(auto& el : vec) {
@@ -14,17 +15,20 @@ bool check_Spalten_size(const std::vector<std::unique_ptr<Spalte>>& vec, std::si
 DataMatrix::DataMatrix(const std::vector<std::string>& titles, std::vector<std::unique_ptr<Spalte>>&& spalten) {
     if(titles.size() != spalten.size()) {
         std::cerr << "Titelanzahl und Spaltenanzahl stimmen nicht überein" << std::endl;
+        throw std::runtime_error("Titelanzahl und Spaltenanzahl stimmen nicht überein");
         return;
     }
     eintraegeCount_ = spalten[0]->size();
     if(!check_Spalten_size(spalten, eintraegeCount_)) {
         std::cerr << "Elementanzahl der Spalten muss gleich sein" << std::endl;
+        throw std::runtime_error("Elementanzahl der Spalten muss gleich sein");
         return;
     }
     spaltenCount_ = titles.size();
     for(int i = 0; i < spaltenCount_; ++i) {
         if(header_indexes_.contains(titles[i])){
             std::cerr << "Mehmals derselbe Titel" << std::endl;
+            throw std::runtime_error("Mehmals derselbe Titel");
             return;
         }
         header_indexes_.emplace(titles[i], i);
@@ -67,12 +71,16 @@ void DataMatrix::show_Spalten_info() const {
         std::cout << header_[i] << " Number: " << (spalten_[i]->is_Number() ? "Ja" : "Nein") << std::endl;
     }
 }
-bool DataMatrix::remove_Spalte(const std::string& name) {
+DataMatrix DataMatrix::remove_Spalte(const std::string& name) {
     if(std::find(header_.begin(), header_.end(), name) == header_.end()) {
         std::cerr << "Spalte nicht gefunden" << std::endl;
-        return false;
+        throw std::runtime_error("Spalte nicht gefunden");
     }
+    std::vector<std::unique_ptr<Spalte>> ret_vec;
+    std::string title;
     std::size_t offset = header_indexes_.at(name);
+    ret_vec.push_back(std::move(spalten_.at(offset)));
+    title = header_.at(offset);
     header_.erase(header_.begin() + offset);
     spalten_.erase(spalten_.begin() + offset);
     header_indexes_.erase(name);
@@ -83,7 +91,8 @@ bool DataMatrix::remove_Spalte(const std::string& name) {
     }
     spaltenCount_--;
     update_Matrix_Size();
-    return true;
+    DataMatrix ret({title}, std::move(ret_vec));
+    return ret;
 }
 void DataMatrix::print_Matrix() const {
     for(const std::string& name : header_) {
