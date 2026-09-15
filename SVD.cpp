@@ -181,4 +181,25 @@ void cleanup_order(SVD_Matrizen& matricies) {
     }
 }
 
+Q_R_Matrizen SVD::q_r_Decomposition(const Matrix& matrix) {
+    std::size_t min_size = matrix.get_Size().cols < matrix.get_Size().rows ? matrix.get_Size().cols : matrix.get_Size().rows;
+    Matrix m = matrix;
+    std::vector<Matrix> q_Matricies;
+    std::vector<std::vector<double>> rows;
+    for(std::size_t i = 0; i < min_size; ++i) {
+        if(m.get_Size().rows == 0 || m.get_Size().cols == 0) break;  
+        auto[Q_n, m_neu] = SVD::q_r_step_spalte(m);
+        q_Matricies.push_back(Q_n);
+        rows.push_back(m_neu[0]);
+        m = m_neu.drop_Zeile(0).drop_Spalte(0);
+        Q_n.print_Matrix();
+        m_neu.print_Matrix();
+    }
+    Matrix Q = get_Matrix_From_Smaller(matrix.get_Size().rows, q_Matricies);
+    Matrix R = Matrix::get_Upper_Trig_From_Vec(rows, matrix.get_Size());
+        
+    return {Q,R};
+
+}
+
  

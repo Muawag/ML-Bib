@@ -79,8 +79,8 @@ int main() {
     {1,  5,  9,  3,  6,  7},
     {7,  2,  4,  6,  8,  1},
     {3,  6,  2,  8,  4,  5},
-    {5, 4, 6, 1, 2, 9},
-    {8, 7, 5, 3, 9, 6}
+    {5,  4,  6,  1,  2,  9},
+    {8,  7,  5,  3,  9,  6}
     };
     Matrix mat4(matrix);
     //Q_R_Matrizen qr = svd.q_r_step_zeile(mat3);
@@ -136,4 +136,9 @@ int main() {
     Matrix result = pca.train_apply(csv_matrix_num);
     result.print_Matrix();
     std::cout << "Fertig" << std::endl;
+    auto[Q, R] = SVD::q_r_Decomposition(mat4);
+    Q.print_Matrix();
+    R.print_Matrix();
+    Matrix testA = Q * R;
+    testA.print_Matrix();
 }

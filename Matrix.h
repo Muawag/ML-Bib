@@ -6,6 +6,7 @@
 #include <vector>
 #include "DataMatrix.h"
 
+
 class Matrix {
     public:
         Matrix() : size_({0, 0}), matrix_(0) {}
@@ -61,6 +62,7 @@ class Matrix {
         Matrix make_Square() const;
         Matrix einbetten_o_l(std::size_t size) const;
         Matrix resize(const Matrix_Size& size) const;
+        static Matrix get_Upper_Trig_From_Vec(const std::vector<std::vector<double>>& rows, const Matrix_Size& size);
     private:
         std::vector<std::vector<double>> matrix_;
         Matrix_Size size_;

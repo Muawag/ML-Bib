@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <string>
 #include <cmath>
+#include "SVD.h"
 
 Matrix::Matrix(int rows, int cols) {
     size_.rows = rows;
@@ -265,6 +266,17 @@ Matrix Matrix::resize(const Matrix_Size& size) const {
     for(std::size_t i = 0; i < size.rows; ++i) {
         for(std::size_t j = 0; j < size.cols; j++) {
             result[i][j] = matrix_[i][j];
+        }
+    }
+    return result;
+}
+
+Matrix Matrix::get_Upper_Trig_From_Vec(const std::vector<std::vector<double>>& rows, const Matrix_Size& size) {
+    Matrix result(size);
+    for(std::size_t i = 0; i < rows.size(); ++i) {
+        for(std::size_t j = 0; j < rows[i].size(); ++j) {
+            std::size_t pos = result.size_.cols - rows[i].size() + j;
+            result.matrix_[i][pos] = rows[i][j];
         }
     }
     return result;
