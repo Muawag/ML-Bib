@@ -99,6 +99,7 @@ class DataMatrix {
         const std::vector<std::string>& get_Header() const;
         const std::vector<std::unique_ptr<Spalte>>& get_Raw() const;
         Matrix_Size get_Size() const;
+        bool is_Vector() const;
     private:
         void update_Matrix_Size();
     private:

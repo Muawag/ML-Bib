@@ -166,3 +166,7 @@ const std::vector<std::unique_ptr<Spalte>>& DataMatrix::get_Raw() const {
 Matrix_Size DataMatrix::get_Size() const {
     return matrix_size_;
 }
+
+bool DataMatrix::is_Vector() const {
+    return (matrix_size_.cols == 1 || matrix_size_.rows == 1);
+}

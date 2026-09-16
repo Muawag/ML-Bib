@@ -281,3 +281,7 @@ Matrix Matrix::get_Upper_Trig_From_Vec(const std::vector<std::vector<double>>& r
     }
     return result;
 }
+
+bool Matrix::is_Vector() const {
+    return(size_.cols == 1 || size_.rows == 1);
+}

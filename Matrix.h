@@ -63,6 +63,7 @@ class Matrix {
         Matrix einbetten_o_l(std::size_t size) const;
         Matrix resize(const Matrix_Size& size) const;
         static Matrix get_Upper_Trig_From_Vec(const std::vector<std::vector<double>>& rows, const Matrix_Size& size);
+        bool is_Vector() const;
     private:
         std::vector<std::vector<double>> matrix_;
         Matrix_Size size_;
