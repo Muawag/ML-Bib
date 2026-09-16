@@ -18,6 +18,8 @@ class Spalte {
         virtual void remove_Element(int pos) = 0;
         virtual std::vector<double> get_Daten_as_Doubles() const = 0;
         virtual double get_Element_as_Double(std::size_t index) const = 0;
+        virtual std::string get_Element_as_String(std::size_t index) const = 0;
+        virtual std::vector<std::string> get_Daten_as_String() const = 0;
 };
 
 template<typename T>
@@ -184,6 +186,24 @@ class TypedSpalte : public Spalte {
             else {
                 throw std::runtime_error("Spalte konnte nicht zu double gecastet werden");
             }
+        }
+
+        std::string get_Element_as_String(std::size_t index) const override {
+            if constexpr (std::is_same_v<T, std::string>) {
+                return daten_[index];
+            }
+            return std::to_string(daten_[index]);
+        }
+
+        std::vector<std::string> get_Daten_as_String() const {
+            if constexpr (std::is_same_v<T, std::string>) {
+                return daten_;
+            }
+            std::vector<std::string> ret;
+            for(auto& val : daten_) {
+                ret.push_back(std::to_string(val));
+            }
+            return daten;
         }
     private:
         std::vector<T> daten_;

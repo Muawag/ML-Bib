@@ -50,3 +50,18 @@ double Metrik::mae(const Matrix& m1, const Matrix& m2) {
 double Metrik::mae(const DataMatrix& d1, const DataMatrix& d2) {
     return mae(Matrix(d1), Matrix(d2));
 }
+
+int Metrik::klassifikationsfehler(const DataMatrix& d1, const DataMatrix& d2) {
+    if(d1.get_Size() != d2.get_Size() || !d1.is_Vector()) {
+        throw std::runtime_error("Daten müssen gleich Gross sein und ein Vector"); 
+    }
+    std::vector<std::string> v_1 = d1.get_Raw()[0]->get_Daten_as_String();
+    std::vector<std::string> v_2 = d2.get_Raw()[0]->get_Daten_as_String();
+
+    int fehler = 0;
+
+    for(std::size_t i = 0; i < v_1.size(); ++i) {
+        fehler = (v_1[i] == v_2[i]) ? fehler : fehler + 1;
+    }
+    return fehler;
+}

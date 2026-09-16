@@ -13,4 +13,5 @@ class Metrik {
         static double rmse(const Matrix& m1, const Matrix& m2);
         static double mae(const DataMatrix& d1, const DataMatrix& d2);
         static double mae(const Matrix& m1, const Matrix& m2);
+        static int klassifikationsfehler(const DataMatrix& d1, const DataMatrix& d2);
 };
