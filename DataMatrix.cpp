@@ -170,3 +170,23 @@ Matrix_Size DataMatrix::get_Size() const {
 bool DataMatrix::is_Vector() const {
     return (matrix_size_.cols == 1 || matrix_size_.rows == 1);
 }
+
+DataMatrix DataMatrix::get_Spalte_as_Matrix_and_Drop(const std::string& name) {
+    if(std::find(header_.begin(), header_.end(), name) == header_.end()) {
+        std::cerr << "Spalte nicht gefunden" << std::endl;
+        throw std::runtime_error("Spalte nicht gefunden");
+    }
+    std::vector<std::unique_ptr<Spalte>> temp_vec;
+    std::size_t index = header_indexes_.at(name);
+    temp_vec.push_back(std::move(spalten_.at(index)));
+    spalten_.erase(spalten_.begin() + index);
+    header_.erase(header_.begin() + index);
+    header_indexes_.erase(name);
+    spaltenCount_--;
+    matrix_size_.cols--;
+    for(auto& [key, val] : header_indexes_) {
+        if(val > index) val--;
+    }
+    DataMatrix result({name}, std::move(temp_vec));
+    return result;
+}

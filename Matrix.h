@@ -13,7 +13,6 @@ class Matrix {
         Matrix(int rows, int cols);
         Matrix(int rows, int cols, double value);
         Matrix(const Matrix_Size& size);
-        //Matrix(const NumberDataMatrix& m); <-- Später implementieren
         Matrix(const std::vector<std::vector<double>>& vecs);
         Matrix(const DataMatrix& d); 
         static Matrix identity(std::size_t size);
@@ -22,6 +21,7 @@ class Matrix {
         Matrix operator+(const Matrix& m2) const;
         Matrix operator-(const Matrix& m2) const;
         Matrix operator*(const Matrix& m2) const;
+        Matrix& operator-=(const Matrix& other);
         Matrix_Size get_Size() const;
         std::vector<double>& operator[](std::size_t index);
         const std::vector<double>& operator[](std::size_t index) const;
@@ -65,6 +65,8 @@ class Matrix {
         Matrix resize(const Matrix_Size& size) const;
         static Matrix get_Upper_Trig_From_Vec(const std::vector<std::vector<double>>& rows, const Matrix_Size& size);
         bool is_Vector() const;
+        static Matrix random(const Matrix_Size& size, double lower, double upper);
+
     private:
         std::vector<std::vector<double>> matrix_;
         Matrix_Size size_;

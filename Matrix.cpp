@@ -3,6 +3,7 @@
 #include <string>
 #include <cmath>
 #include "SVD.h"
+#include <random>
 
 Matrix::Matrix(int rows, int cols) {
     size_.rows = rows;
@@ -290,4 +291,25 @@ Matrix Matrix::get_Upper_Trig_From_Vec(const std::vector<std::vector<double>>& r
 
 bool Matrix::is_Vector() const {
     return(size_.cols == 1 || size_.rows == 1);
+}
+
+Matrix Matrix::random(const Matrix_Size& size, double mean, double stddev) {
+    Matrix result(size);
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
+    std::normal_distribution<double> dist(mean, stddev);
+    for(std::size_t i = 0; i < result.size_.rows; ++i) {
+        for(std::size_t j = 0 ; j < result.size_.cols; ++j) {
+            result[i][j] = dist(gen);
+        }
+    }
+    return result;
+}
+
+Matrix& Matrix::operator-=(const Matrix& other) {
+    for(int i = 0; i < size_.rows; i++)
+        for(int j = 0; j < size_.cols; j++)
+            matrix_[i][j] -= other.matrix_[i][j];
+    return *this;
 }

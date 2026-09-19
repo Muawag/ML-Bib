@@ -191,19 +191,21 @@ class TypedSpalte : public Spalte {
         std::string get_Element_as_String(std::size_t index) const override {
             if constexpr (std::is_same_v<T, std::string>) {
                 return daten_[index];
+            } else {
+                return std::to_string(daten_[index]);
             }
-            return std::to_string(daten_[index]);
         }
 
         std::vector<std::string> get_Daten_as_String() const {
             if constexpr (std::is_same_v<T, std::string>) {
                 return daten_;
+            } else {
+                std::vector<std::string> ret;
+                for(auto val : daten_) {
+                    ret.push_back(std::to_string(val));
+                }
+                return ret;
             }
-            std::vector<std::string> ret;
-            for(auto& val : daten_) {
-                ret.push_back(std::to_string(val));
-            }
-            return daten;
         }
     private:
         std::vector<T> daten_;

@@ -7,6 +7,7 @@
 #include "PCA.h"
 #include "CSVLoader.h"
 #include "LinearRegression.h"
+#include "LogisticRegression.h"
 
 
 int main() {
@@ -127,12 +128,15 @@ int main() {
     Matrix result = pca.train_apply(mat4);
     result.print_Matrix();
     std::cout << "test github" << std::endl;
-    std::cout << "test Github lap" << std::endl;
+    std::cout << "test Github lap" << std::endl;*/
     DataMatrix csv_matrix = CSVLoader::load_CSV("iris.csv");
     //csv_matrix.print_Matrix();
-    csv_matrix.remove_Spalte("species");
+    DataMatrix predict = csv_matrix.get_Spalte_as_Matrix_and_Drop("species");
+    predict.print_Matrix();
+    csv_matrix.print_Matrix();
+    Matrix x_daten(csv_matrix);
     //csv_matrix.print_Matrix();
-    Matrix csv_matrix_num(csv_matrix);
+    /*Matrix csv_matrix_num(csv_matrix);
     //csv_matrix_num.print_Matrix();
     PCA pca;
     Matrix result = pca.train_apply(csv_matrix_num);
@@ -143,11 +147,17 @@ int main() {
     R.print_Matrix();
     Matrix testA = Q * R;
     testA.print_Matrix();*/
-    Matrix x_daten({{1, 1}, {1, 2}, {1, 3}});
-    Matrix y_daten({{3}, {5}, {7}});
+    /*Matrix x_daten({{1, 1}, {1, 2}, {1, 3}});
+    Matrix y_daten({{3,0}, {5,0}, {7,0}});
     LinearRegression lin;
     lin.train(x_daten, y_daten);
     Matrix x_test({{1, 4}, {1, 5}});
     auto predictions = lin.predict(x_test);
-    predictions.print_Matrix();
+    predictions.print_Matrix();*/
+    LogisticRegression<std::string> logReg;
+    logReg.train(x_daten, predict, 1000, 0.05, 32);
+    std::vector<std::string> test_res_vec = logReg.predict(x_daten);
+    for(std::string& in : test_res_vec) {
+        std::cout << in << std::endl;
+    }
 }

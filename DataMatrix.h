@@ -100,6 +100,7 @@ class DataMatrix {
         const std::vector<std::unique_ptr<Spalte>>& get_Raw() const;
         Matrix_Size get_Size() const;
         bool is_Vector() const;
+        DataMatrix get_Spalte_as_Matrix_and_Drop(const std::string& title);
     private:
         void update_Matrix_Size();
     private:
