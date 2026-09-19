@@ -11,6 +11,7 @@ class Matrix {
     public:
         Matrix() : size_({0, 0}), matrix_(0) {}
         Matrix(int rows, int cols);
+        Matrix(int rows, int cols, double value);
         Matrix(const Matrix_Size& size);
         //Matrix(const NumberDataMatrix& m); <-- Später implementieren
         Matrix(const std::vector<std::vector<double>>& vecs);

@@ -50,6 +50,12 @@ Matrix::Matrix(const DataMatrix& d) {
     }
 }
 
+Matrix::Matrix(int rows, int cols, double value) {
+    size_.rows = rows;
+    size_.cols = cols;
+    matrix_.resize(rows, std::vector<double>(cols, value));
+}
+
 std::vector<double>& Matrix::operator[](std::size_t row) {
     return matrix_[row];
 }
