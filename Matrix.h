@@ -66,10 +66,13 @@ class Matrix {
         static Matrix get_Upper_Trig_From_Vec(const std::vector<std::vector<double>>& rows, const Matrix_Size& size);
         bool is_Vector() const;
         static Matrix random(const Matrix_Size& size, double lower, double upper);
+        void set_scaled(bool scaled);
+        bool is_scaled() const;
 
     private:
         std::vector<std::vector<double>> matrix_;
         Matrix_Size size_;
+        bool scaled;
         //bool is_Diagonal_;
         //bool is_Orthogonal_;
 };

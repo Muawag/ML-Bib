@@ -1,13 +1,13 @@
 #pragma once
-#include "NumberDataMatrix.h"
 #include <vector>
+#include "Matrix.h"
 
 class Scaler {
     public:
         virtual ~Scaler() = default;
-        virtual void train(const NumberDataMatrix& matrix) = 0;
-        virtual NumberDataMatrix train_apply(const NumberDataMatrix& matrix) = 0;
-        virtual NumberDataMatrix apply(const NumberDataMatrix& matrix) = 0;
+        virtual void train(const Matrix& matrix) = 0;
+        virtual Matrix train_apply(const Matrix& matrix) = 0;
+        virtual Matrix apply(const Matrix& matrix) = 0;
     protected:
         bool trained;
 };
@@ -15,9 +15,9 @@ class Scaler {
 class StandartScaler : public Scaler {
     public:
         StandartScaler();
-        void train(const NumberDataMatrix& matrix) override;
-        NumberDataMatrix train_apply(const NumberDataMatrix& matrix) override;
-        NumberDataMatrix apply(const NumberDataMatrix& matrix) override;
+        void train(const Matrix& matrix) override;
+        Matrix train_apply(const Matrix& matrix) override;
+        Matrix apply(const Matrix& matrix) override;
     private:
         double get_Mittelwert(const std::vector<double>& daten);
         double get_Standartabweichung(const std::vector<double>& daten, int index);

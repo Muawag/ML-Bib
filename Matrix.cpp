@@ -8,18 +8,22 @@
 Matrix::Matrix(int rows, int cols) {
     size_.rows = rows;
     size_.cols = cols;
+    scaled = false;
     matrix_.resize(rows, std::vector<double>(cols, 0.0));
 }
 
 Matrix::Matrix(const Matrix_Size& size) : size_(size) {
+    scaled = false;
     matrix_.resize(size.rows, std::vector<double>(size.cols, 0.0));
 }
 Matrix::Matrix(const std::vector<std::vector<double>>& vecs) {
     if(vecs.empty()) {
         size_.rows = 0;
         size_.cols = 0;
+        scaled = false;
         return;
     }
+    scaled = false;
     size_.rows = vecs.size();
     size_.cols = vecs.at(0).size();
     matrix_.resize(size_.rows);
@@ -36,6 +40,7 @@ Matrix::Matrix(const DataMatrix& d) {
         throw std::runtime_error("Datamatrix darf nur numerische Einträge haben");
     }
     size_ = d.get_Size();
+    scaled = false;
     if(size_.rows == 0) {
         std::cerr << "Datamatrix war leer" << std::endl;
         return;
@@ -52,6 +57,7 @@ Matrix::Matrix(const DataMatrix& d) {
 }
 
 Matrix::Matrix(int rows, int cols, double value) {
+    scaled = false;
     size_.rows = rows;
     size_.cols = cols;
     matrix_.resize(rows, std::vector<double>(cols, value));
@@ -312,4 +318,12 @@ Matrix& Matrix::operator-=(const Matrix& other) {
         for(int j = 0; j < size_.cols; j++)
             matrix_[i][j] -= other.matrix_[i][j];
     return *this;
+}
+
+void Matrix::set_scaled(bool scaled) {
+    this->scaled = scaled;
+}
+
+bool Matrix::is_scaled() const {
+    return scaled;
 }

@@ -67,9 +67,6 @@ int main() {
     /*for(double d : testVector) {
         std::cout << d << "\t"; 
     }*/
-    StandartScaler scaler;
-    scaler.train(num_Matrix);
-    NumberDataMatrix num_scaled = scaler.apply(num_Matrix);
     Matrix mat(d);
     Matrix mat2(d);
     //mat.print_Matrix();
@@ -154,8 +151,14 @@ int main() {
     Matrix x_test({{1, 4}, {1, 5}});
     auto predictions = lin.predict(x_test);
     predictions.print_Matrix();*/
+    StandartScaler scaler;
+    Matrix x_scaled = scaler.train_apply(x_daten);
+    x_scaled.print_Matrix();
+    PCA pca;
+    Matrix pca_x = pca.train_apply(x_scaled);
+    pca_x.print_Matrix();
     LogisticRegression<std::string> logReg;
-    logReg.train(x_daten, predict, 1000, 0.05, 32);
+    logReg.train(x_daten, predict, 2000, 0.1, 10);
     std::vector<std::string> test_res_vec = logReg.predict(x_daten);
     for(std::string& in : test_res_vec) {
         std::cout << in << std::endl;

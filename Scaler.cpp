@@ -33,7 +33,7 @@ double StandartScaler::get_Standartabweichung(const std::vector<double>& daten, 
     abweichung = abweichung == 0 ? 1 : abweichung;
     return abweichung;
 }
-void StandartScaler::train(const NumberDataMatrix& matrix) {
+void StandartScaler::train(const Matrix& matrix) {
     if(trained) {
         std::cout << "Überschreiben von alten Scaling Parametern" << std::endl;
     }
@@ -46,32 +46,32 @@ void StandartScaler::train(const NumberDataMatrix& matrix) {
     }
     trained = true;
 }
-NumberDataMatrix StandartScaler::apply(const NumberDataMatrix& matrix) {
+Matrix StandartScaler::apply(const Matrix& matrix) {
     if(matrix.is_scaled()) {
         std::cerr << "Daten wurden schon skaliert" << std::endl;
-        return NumberDataMatrix{0,0};
+        return Matrix{0,0};
     }
     if(!trained) {
         std::cerr << "Der Scaler wurde noch nicht trainiert" << std::endl;
-        return NumberDataMatrix{0,0};
+        return Matrix{0,0};
     }
-    NumberDataMatrix scaled_matrix(matrix.get_Size().rows, matrix.get_Size().cols);
-    std::vector<std::string> header(matrix.get_Size().cols);
-    std::vector<std::string> header_old = matrix.get_Header();
-    for(int i = 0; i < header.size(); ++i) {
+    Matrix scaled_matrix(matrix.get_Size().rows, matrix.get_Size().cols);
+    //std::vector<std::string> header(matrix.get_Size().cols);
+    //std::vector<std::string> header_old = matrix.get_Header();
+    /*for(int i = 0; i < header.size(); ++i) {
         header[i] = header_old[i] + "_scaled";
     }
-    scaled_matrix.set_Header(header);
-    for(int i = 0; i < matrix.get_Size().cols; ++i) {
-        for(int j = 0; j < matrix.get_Size().rows; ++j) {
-            scaled_matrix[i][j] = (matrix[i][j] - mittelwerte[i]) / standartabweichungen[i];
+    scaled_matrix.set_Header(header);*/
+    for(int i = 0; i < matrix.get_Size().rows; ++i) {
+        for(int j = 0; j < matrix.get_Size().cols; ++j) {
+            scaled_matrix[i][j] = (matrix[i][j] - mittelwerte[j]) / standartabweichungen[j];
         }
     }
     scaled_matrix.set_scaled(true);
     return scaled_matrix;
 }
 
-NumberDataMatrix StandartScaler::train_apply(const NumberDataMatrix& matrix) {
+Matrix StandartScaler::train_apply(const Matrix& matrix) {
     train(matrix);
     return apply(matrix);
 }
