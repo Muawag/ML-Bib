@@ -115,20 +115,20 @@ std::unique_ptr<Spalte> make_Column(const std::vector<std::string>& col) {
         case Column_Type::Bool: {
             std::vector<bool> data;
             for(auto& s : col) data.push_back(to_Bool(s));
-            return std::make_unique<TypedSpalte<bool>>(std::move(data));
+            return std::make_unique<TypedSpalte<bool>>(std::move(data), Column_Type::Bool);
         }
         case Column_Type::Int: {
             std::vector<int> data;
             for(auto& s : col) data.push_back(std::stoi(s));
-            return std::make_unique<TypedSpalte<int>>(std::move(data));
+            return std::make_unique<TypedSpalte<int>>(std::move(data), Column_Type::Int);
         }
         case Column_Type::Double: {
             std::vector<double> data;
             for(auto& s : col) data.push_back(std::stod(s));
-            return std::make_unique<TypedSpalte<double>>(std::move(data));
+            return std::make_unique<TypedSpalte<double>>(std::move(data), Column_Type::Double);
         }
         default:
-            return std::make_unique<TypedSpalte<std::string>>(col);
+            return std::make_unique<TypedSpalte<std::string>>(std::move(col), Column_Type::String);
     }
 }
 

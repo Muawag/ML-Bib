@@ -11,8 +11,8 @@
 
 
 int main() {
-    TypedSpalte<int> spalte({1,2,3,4});
-    TypedSpalte<std::string> spalte2({"a","b","c","d"});
+    TypedSpalte<int> spalte({1,2,3,4}, Column_Type::Int);
+    TypedSpalte<std::string> spalte2({"a","b","c","d"}, Column_Type::String);
     //std::cout << spalte[10] << std::endl;
     std::vector<std::string> titles = {"Spalte1", "Spalte2"};
     std::vector<std::unique_ptr<Spalte>> spalten;
@@ -21,7 +21,7 @@ int main() {
     DataMatrix d(titles, std::move(spalten));
     //d.print_Matrix();
     std::vector<std::string> tit2 = {"a1","a2"};
-    TypedSpalte<double> spalte3({3.2,5.3,4.8,3.4});
+    TypedSpalte<double> spalte3({3.2,5.3,4.8,3.4}, Column_Type::Double);
     std::vector<std::unique_ptr<Spalte>> spaltenNeu;
     spaltenNeu.emplace_back(std::make_unique<TypedSpalte<int>>(spalte));
     spaltenNeu.emplace_back(std::make_unique<TypedSpalte<double>>(spalte3));

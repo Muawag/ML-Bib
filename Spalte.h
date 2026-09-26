@@ -7,6 +7,13 @@
 #include <concepts>
 #include <stdexcept>
 
+enum class Column_Type {
+    Bool, 
+    Int, 
+    Double, 
+    String
+};
+
 class Spalte {
     public:
         virtual ~Spalte() = default;
@@ -20,15 +27,16 @@ class Spalte {
         virtual double get_Element_as_Double(std::size_t index) const = 0;
         virtual std::string get_Element_as_String(std::size_t index) const = 0;
         virtual std::vector<std::string> get_Daten_as_String() const = 0;
+        virtual Column_Type get_Type() const = 0;
 };
 
 template<typename T>
 class TypedSpalte : public Spalte {
     public:
         TypedSpalte() = default;
-        explicit TypedSpalte(const std::vector<T>& daten) : daten_(daten) {} 
-        explicit TypedSpalte(std::vector<T>&& daten) : daten_(std::move(daten)) {}
-        explicit TypedSpalte(std::size_t size) : daten_(size) {}
+        explicit TypedSpalte(const std::vector<T>& daten, const Column_Type& type) : daten_(daten), column_type(type) {} 
+        explicit TypedSpalte(std::vector<T>&& daten, const Column_Type& type) : daten_(std::move(daten)), column_type(type) {}
+        explicit TypedSpalte(std::size_t size, const Column_Type& type) : daten_(size), column_type(type) {}
         std::string typName() const override { return typeid(T).name(); }
         size_t size() const override { return daten_.size(); }
         void add_data(const T& newValue) {
@@ -207,13 +215,12 @@ class TypedSpalte : public Spalte {
                 return ret;
             }
         }
+
+        Column_Type get_Type() const override {
+            return column_type;
+        }
     private:
         std::vector<T> daten_;
+        Column_Type column_type;
 };
 
-enum class Column_Type {
-    Bool, 
-    Int, 
-    Double, 
-    String
-};
