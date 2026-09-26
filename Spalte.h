@@ -6,13 +6,12 @@
 #include <iostream>
 #include <concepts>
 #include <stdexcept>
+#include "Column_Type.h"
+#include <memory>
 
-enum class Column_Type {
-    Bool, 
-    Int, 
-    Double, 
-    String
-};
+
+template<typename T>
+constexpr Column_Type get_Type_From_Datatype();
 
 class Spalte {
     public:
@@ -28,6 +27,7 @@ class Spalte {
         virtual std::string get_Element_as_String(std::size_t index) const = 0;
         virtual std::vector<std::string> get_Daten_as_String() const = 0;
         virtual Column_Type get_Type() const = 0;
+        virtual std::unique_ptr<Spalte> select_rows(const std::vector<size_t>& indicies) const = 0;
 };
 
 template<typename T>
@@ -77,7 +77,7 @@ class TypedSpalte : public Spalte {
                 return {}; 
             }
             using R = std::common_type_t<T,U>;
-            TypedSpalte<R> result(this->size());
+            TypedSpalte<R> result(this->size(), get_Type_From_Datatype<R>());
             for(std::size_t i = 0; i < this->size(); ++i) {
                 result[i] = (*this)[i] + other[i];
             }
@@ -90,7 +90,7 @@ class TypedSpalte : public Spalte {
                 return {}; 
             }
             using R = std::common_type_t<T,U>;
-            TypedSpalte<R> result(this->size());
+            TypedSpalte<R> result(this->size(), get_Type_From_Datatype<R>());
             for(std::size_t i = 0; i < this->size(); ++i) {
                 result[i] = (*this)[i] * other[i];
             }
@@ -103,7 +103,7 @@ class TypedSpalte : public Spalte {
                 return {}; 
             }
             using R = std::common_type_t<T,U>;
-            TypedSpalte<R> result(this->size());
+            TypedSpalte<R> result(this->size(), get_Type_From_Datatype<R>());
             for(std::size_t i = 0; i < this->size(); ++i) {
                 result[i] = (*this)[i] - other[i];
             }
@@ -116,7 +116,7 @@ class TypedSpalte : public Spalte {
                 return {}; 
             }
             using R = std::common_type_t<T,U>;
-            TypedSpalte<R> result(this->size());
+            TypedSpalte<R> result(this->size(), get_Type_From_Datatype<R>());
             for(std::size_t i = 0; i < this->size(); ++i) {
                 if(other[i] == 0) {
                     std::cout << "Durch 0 teilen" << std::endl;
@@ -130,7 +130,7 @@ class TypedSpalte : public Spalte {
         requires std::integral<U> || std::floating_point<U>
         auto operator*(U value) const -> TypedSpalte<std::common_type_t<T,U>> {
             using R = std::common_type_t<T,U>;
-            TypedSpalte<R> result(this->size());
+            TypedSpalte<R> result(this->size(), get_Type_From_Datatype<R>());
             for(std::size_t i = 0; i < this->size(); ++i) {
                 result[i] = (*this)[i] * value;
             }
@@ -144,7 +144,7 @@ class TypedSpalte : public Spalte {
                 return {}; 
             }
             using R = std::common_type_t<T,U>;
-            TypedSpalte<R> result(this->size());
+            TypedSpalte<R> result(this->size(), get_Type_From_Datatype<R>());
             for(std::size_t i = 0; i < this->size(); ++i) {
                 result[i] = (*this)[i] / value;
             }
@@ -154,7 +154,7 @@ class TypedSpalte : public Spalte {
         requires std::integral<U> || std::floating_point<U>
         auto operator+(U value) const -> TypedSpalte<std::common_type_t<T,U>> {
             using R = std::common_type_t<T,U>;
-            TypedSpalte<R> result(this->size());
+            TypedSpalte<R> result(this->size(), get_Type_From_Datatype<R>());
             for(std::size_t i = 0; i < this->size(); ++i) {
                 result[i] = (*this)[i] + value;
             }
@@ -164,7 +164,7 @@ class TypedSpalte : public Spalte {
         requires std::integral<U> || std::floating_point<U>
         auto operator-(U value) const -> TypedSpalte<std::common_type_t<T,U>> {
             using R = std::common_type_t<T,U>;
-            TypedSpalte<R> result(this->size());
+            TypedSpalte<R> result(this->size(), get_Type_From_Datatype<R>());
             for(std::size_t i = 0; i < this->size(); ++i) {
                 result[i] = (*this)[i] - value;
             }
@@ -219,8 +219,43 @@ class TypedSpalte : public Spalte {
         Column_Type get_Type() const override {
             return column_type;
         }
+        
+        std::unique_ptr<Spalte> select_rows(const std::vector<std::size_t>& indicies) const override {
+            std::vector<T> result;
+            result.reserve(indicies.size());
+            for(std::size_t i : indicies) {
+                result.push_back(daten_.at(i));
+            }
+            return std::make_unique<TypedSpalte<T>>(std::move(result), column_type);
+        }
+
+
+
     private:
         std::vector<T> daten_;
         Column_Type column_type;
 };
+
+        
+
+
+    template<typename T>
+    constexpr Column_Type get_Type_From_Datatype() {
+        if constexpr (std::is_same_v<T, int>) {
+            return Column_Type::Int;
+        }
+        else if constexpr (std::is_same_v<T, bool>) {
+            return Column_Type::Bool;
+        }
+        else if constexpr (std::is_same_v<T, float> ||std::is_same_v<T, double>) {
+            return Column_Type::Double;
+        }
+        else if constexpr (std::is_same_v<T, std::string>) {
+            return Column_Type::String;
+        }
+        else {
+            static_assert(!sizeof(T), "Nicht unterstützer Datentyp");
+        }
+    }
+
 

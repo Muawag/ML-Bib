@@ -9,6 +9,7 @@
 #include "Matrix_Size.h"
 #include "NumberDataMatrix.h"
 
+
 class DataMatrix {
     public:
         DataMatrix(const std::vector<std::string>& titles , std::vector<std::unique_ptr<Spalte>>&& spalten);
