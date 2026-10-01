@@ -129,5 +129,6 @@ class LogisticRegression : public Classifier<T> {
             std::map<T, int> possibility_Classes_Type_Key;
             int possible_Classes_Count_;
             Matrix weights;
+            Matrix bias;
             
 };
