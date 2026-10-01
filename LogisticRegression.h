@@ -12,13 +12,15 @@
 template <typename T>
 class LogisticRegression : public Classifier<T> {
     public:
-        std::vector<T> predict(const Matrix& predict_daten) const override {
+        DataMatrix predict(const Matrix& predict_daten) const override {
             std::vector<T> result;
             result.reserve(predict_daten.get_Size().rows);
             for(std::size_t i = 0; i < predict_daten.get_Size().rows; ++i) {
                 result.push_back(predict_single(predict_daten[i]));
             }
-            return result;
+            TypedSpalte<T> temp_Spalte(std::move(result));
+            DataMatrix ret_matrix({"Predict"}, {std::move(std::make_unique<T>(std::move(result)))});
+            return ret_matrix;
         }
 
         void train(const Matrix& x_daten, const DataMatrix& y_daten, int epochen = 200, double lr = 0.05, int batch_size = 32) override {
