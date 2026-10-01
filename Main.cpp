@@ -8,6 +8,7 @@
 #include "LinearRegression.h"
 #include "LogisticRegression.h"
 #include "TrainTestSplit.h"
+#include "Metrik.h"
 
 
 int main() {
@@ -32,12 +33,8 @@ int main() {
    
     LogisticRegression<std::string> logReg;
     logReg.train(x_daten_train, predict_y, 2000, 0.1, 10);
-    std::vector<std::string> test_res_vec = logReg.predict(x_daten_test);
+    DataMatrix test_res_vec = logReg.predict(x_daten_test);
 
-    predict_y_test.print_Matrix();
-    std::cout << "Predicted Values" << std::endl;
-    for(std::string& in : test_res_vec) {
-        std::cout << in << std::endl;
-    }
+    std::cout << "Klassifikationsfehler: " << Metrik::klassifikationsfehler(predict_y_test, test_res_vec) << std::endl;
         
 }

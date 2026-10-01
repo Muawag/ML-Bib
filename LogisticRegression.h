@@ -19,7 +19,9 @@ class LogisticRegression : public Classifier<T> {
                 result.push_back(predict_single(predict_daten[i]));
             }
             TypedSpalte<T> temp_Spalte(std::move(result));
-            DataMatrix ret_matrix({"Predict"}, {std::move(std::make_unique<T>(std::move(result)))});
+            std::vector<std::unique_ptr<Spalte>> spalte;
+            spalte.push_back(std::make_unique<TypedSpalte<T>>(std::move(temp_Spalte)));
+            DataMatrix ret_matrix({"Predict"}, std::move(spalte));
             return ret_matrix;
         }
 

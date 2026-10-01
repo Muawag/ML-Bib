@@ -37,8 +37,7 @@ class TypedSpalte : public Spalte {
         explicit TypedSpalte(const std::vector<T>& daten, const Column_Type& type) : daten_(daten), column_type(type) {} 
         explicit TypedSpalte(std::vector<T>&& daten, const Column_Type& type) : daten_(std::move(daten)), column_type(type) {}
         explicit TypedSpalte(std::size_t size, const Column_Type& type) : daten_(size), column_type(type) {}
-        explicit TypedSpalte(const vector<T>& daten) {
-            daten_ = daten;
+        explicit TypedSpalte(const std::vector<T>& daten) : daten_(daten) {
             column_type = get_Type_From_Datatype<T>();
         }
         std::string typName() const override { return typeid(T).name(); }
