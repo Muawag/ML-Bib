@@ -22,12 +22,10 @@ Train_Test_Split_Matricies TrainTestSplit::split(DataMatrix& data_matrix, float 
     std::vector<std::unique_ptr<Spalte>> train_vecs;
     std::vector<std::unique_ptr<Spalte>> test_vecs;
 
-    std::cout << "Vor" << std::endl;
     for(const auto& col : data_matrix.get_Raw()) {
         train_vecs.push_back(col->select_rows(train_indicies));
         test_vecs.push_back(col->select_rows(test_indicies));;
     }
-    std::cout << "nach" << std::endl;
     DataMatrix train_data_matrix(data_matrix.get_Header(), std::move(train_vecs));
     DataMatrix test_data_matrix(data_matrix.get_Header(), std::move(test_vecs));
     return {std::move(train_data_matrix), std::move(test_data_matrix)};
