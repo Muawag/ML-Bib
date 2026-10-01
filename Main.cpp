@@ -35,6 +35,6 @@ int main() {
     logReg.train(x_daten_train, predict_y, 2000, 0.1, 10);
     DataMatrix test_res_vec = logReg.predict(x_daten_test);
 
-    std::cout << "Klassifikationsfehler: " << Metrik::klassifikationsfehler(predict_y_test, test_res_vec) << std::endl;
+    std::cout << "Accuracy: " << Metrik::accuracy(predict_y_test, test_res_vec) << std::endl;
         
 }
