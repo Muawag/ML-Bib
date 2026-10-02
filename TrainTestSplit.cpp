@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <random>
 #include <memory>
+#include <map>
 
 
 
@@ -29,4 +30,16 @@ Train_Test_Split_Matricies TrainTestSplit::split(DataMatrix& data_matrix, float 
     DataMatrix train_data_matrix(data_matrix.get_Header(), std::move(train_vecs));
     DataMatrix test_data_matrix(data_matrix.get_Header(), std::move(test_vecs));
     return {std::move(train_data_matrix), std::move(test_data_matrix)};
+}
+
+Train_Test_Split_Matricies TrainTestSplit::split(DataMatrix& data_matrix, float train_size, std::string stratify_column, unsigned seed) {
+    std::size_t n = data_matrix.get_Size().rows;
+
+    std::vector<std::string> string_vec = data_matrix.get_Column_as_String_vec(stratify_column);
+
+    std::map<std::string, std::vector<std::size_t>> indices_per_class;
+
+    for (std::size_t i = 0; i < string_vec.size(); ++i) {
+        indices_per_class[string_vec[i]].push_back(i);
+    }
 }

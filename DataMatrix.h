@@ -102,6 +102,8 @@ class DataMatrix {
         Matrix_Size get_Size() const;
         bool is_Vector() const;
         DataMatrix get_Spalte_as_Matrix_and_Drop(const std::string& title);
+        std::vector<std::string> get_Column_as_String_vec(const std::string& title) const;
+        std::vector<std::string> get_Column_as_String_vec(std::size_t index) const;
     private:
         void update_Matrix_Size();
     private:

@@ -190,3 +190,18 @@ DataMatrix DataMatrix::get_Spalte_as_Matrix_and_Drop(const std::string& name) {
     DataMatrix result({name}, std::move(temp_vec));
     return result;
 }
+
+std::vector<std::string> DataMatrix::get_Column_as_String_vec(const std::string& title) const {
+    auto it = header_indexes_.find(title);
+    if(it == header_indexes_.end()) {
+        throw std::runtime_error("Spalte konnte nicht gefunden werden");
+    }
+    return get_Column_as_String_vec(it->second);
+}
+
+std::vector<std::string> DataMatrix::get_Column_as_String_vec(std::size_t index) const {
+    if(index >= spalten_.size()) {
+        throw std::out_of_range("Index war zu gross");
+    }
+    return spalten_[index]->get_Daten_as_String();
+}
