@@ -14,7 +14,7 @@
 int main() {
     DataMatrix csv_matrix = CSVLoader::load_CSV("iris.csv");
     csv_matrix.print_Matrix();
-    auto[train_daten, test_daten] = TrainTestSplit::split(csv_matrix, 0.8);
+    auto[train_daten, test_daten] = TrainTestSplit::split(csv_matrix, 0.8, "species");
     DataMatrix predict_y = train_daten.get_Spalte_as_Matrix_and_Drop("species");
     Matrix x_daten_train(train_daten);
     DataMatrix predict_y_test = test_daten.remove_Spalte("species");
@@ -31,8 +31,8 @@ int main() {
    
 
     LogisticRegression<std::string> logReg;
-    logReg.train(x_daten_train, predict_y, 2000, 0.1, 10);
-    DataMatrix test_res_vec = logReg.predict(x_daten_test);
+    logReg.train(pca_x_train, predict_y, 1000, 0.05, 42);
+    DataMatrix test_res_vec = logReg.predict(pca_x_test);
 
     std::cout << "Accuracy: " << Metrik::accuracy(predict_y_test, test_res_vec) << std::endl;
         
