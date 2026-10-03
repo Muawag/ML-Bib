@@ -18,6 +18,7 @@ class Matrix {
         static Matrix identity(std::size_t size);
         static Matrix from_Vector(const std::vector<double>& vec, bool transpose);
         static Matrix get_Einheitsvektor(std::size_t size, std::size_t index, bool transpose);
+        static Matrix get_Matrix_With_Value(const Matrix_Size& size, double val);
         Matrix operator+(const Matrix& m2) const;
         Matrix operator-(const Matrix& m2) const;
         Matrix operator*(const Matrix& m2) const;

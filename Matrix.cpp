@@ -327,3 +327,7 @@ void Matrix::set_scaled(bool scaled) {
 bool Matrix::is_scaled() const {
     return scaled;
 }
+
+Matrix Matrix::get_Matrix_With_Value(const Matrix_Size& size, double val) {
+    return Matrix(size.rows, size.cols, val);
+}

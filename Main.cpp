@@ -33,7 +33,7 @@ int main() {
    
 
     LogisticRegression<std::string> logReg;
-    logReg.train(pca_x_train, predict_y, 1000, 0.05, 42);
+    logReg.train(pca_x_train, predict_y, 2000, 0.2, 42);
     DataMatrix test_res_vec = logReg.predict(pca_x_test);
 
     std::cout << "Accuracy: " << Metrik::accuracy(predict_y_test, test_res_vec) << std::endl;

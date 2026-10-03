@@ -51,7 +51,7 @@ class LogisticRegression : public Classifier<T> {
             double best_logit = std::inner_product(weights[0].begin(), weights[0].end(), eintrag.begin(), 0.0);
 
             for (std::size_t i = 1; i < possible_Classes_Count_; ++i) {
-                double logit = std::inner_product(weights[i].begin(), weights[i].end(), eintrag.begin(), 0.0);
+                double logit = std::inner_product(weights[i].begin(), weights[i].end(), eintrag.begin(), 0.0) + bias[i][0];
                 if (logit > best_logit) {
                     best_logit = logit;
                     best = i;
@@ -69,6 +69,7 @@ class LogisticRegression : public Classifier<T> {
             std::vector<double> logits(possible_Classes_Count_);
             for (std::size_t i = 0; i < possible_Classes_Count_; ++i) {
                 logits[i] = std::inner_product(weights[i].begin(), weights[i].end(), eintrag.begin(), 0.0);
+                logits[i] += bias[i][0];
             }
             double max_logit = *std::max_element(logits.begin(), logits.end());
             double nenner = 0.0;
@@ -88,22 +89,29 @@ class LogisticRegression : public Classifier<T> {
 
         void optimize(const Matrix& x_daten, const Matrix& y_daten, int epochen, double n, int batch_size) {
             weights = Matrix::random({possible_Classes_Count_, x_daten.get_Size().cols}, 0.0, 0.01); 
-            int batch_Size = batch_size;
+            bias = Matrix::get_Matrix_With_Value({possible_Classes_Count_, 1}, 0.0);
             for(int e = 0; e < epochen; ++e) {
-                auto batches = Utility::get_Batches(x_daten, y_daten, batch_Size);
+                auto batches = Utility::get_Batches(x_daten, y_daten, batch_size);
                 for(auto& [x_batch, y_batch] : batches) {
-                    Matrix grad = gardient(x_batch, y_batch);
-                    weights -= n * grad;
+                    auto [dw, db] = gradient(x_batch, y_batch);
+                    weights -= n * dw;
+                    bias -= n * db;
                 }
             }
+            bias.print_Matrix();
         }
 
-        Matrix gardient(const Matrix& x_Batch, const Matrix& y_Batch) {
+        std::tuple<Matrix, Matrix> gradient(const Matrix& x_Batch, const Matrix& y_Batch) {
             Matrix P_T = predict_proba(x_Batch);
             Matrix Y = get_Y_one_Hot_Encoded(y_Batch);
             Matrix Diff = Y - P_T;
+            double scale = -1.0 / x_Batch.get_Size().rows;
 
-            return (Diff.transpose() * x_Batch) * -1.0;
+            Matrix dw = (Diff.transpose() * x_Batch) * scale;
+
+            Matrix ones(x_Batch.get_Size().rows, 1, 1.0);
+            Matrix db = (Diff.transpose() * ones) * scale;
+            return {dw, db};
 
         }
         private:
