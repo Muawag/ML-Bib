@@ -104,8 +104,11 @@ class DataMatrix {
         DataMatrix get_Spalte_as_Matrix_and_Drop(const std::string& title);
         std::vector<std::string> get_Column_as_String_vec(const std::string& title) const;
         std::vector<std::string> get_Column_as_String_vec(std::size_t index) const;
+        void one_hot_encode(const std::string& column, const std::vector<std::string>& eligible_cols = {});
     private:
         void update_Matrix_Size();
+        std::vector<std::string> get_new_Headers(const std::string& column, std::vector<std::string>& new_headers) const;
+        std::vector<std::unique_ptr<Spalte>> get_new_cols_from_one_hot(const std::vector<std::vector<bool>>&& new_cols) const;
     private:
         std::vector<std::string> header_;
         std::vector<std::unique_ptr<Spalte>> spalten_;

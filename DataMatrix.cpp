@@ -205,3 +205,52 @@ std::vector<std::string> DataMatrix::get_Column_as_String_vec(std::size_t index)
     }
     return spalten_[index]->get_Daten_as_String();
 }
+
+void DataMatrix::one_hot_encode(const std::string& column, const std::vector<std::string>& eligible_cols) {
+    auto it = header_indexes_.find(column);
+    if (it == header_indexes_.end()) throw std::runtime_error("Spalte konnte nicht gefunden werden");
+
+    std::size_t index = it->second;
+    std::vector<std::string> vec = get_Column_as_String_vec(index);
+    std::set<std::string> found_cols(vec.begin(), vec.end());
+
+    std::vector<std::string> categories = eligible_cols.empty()
+        ? std::vector<std::string>(found_cols.begin(), found_cols.end())
+        : eligible_cols;
+
+    std::vector<std::vector<bool>> new_cols(categories.size(), std::vector<bool>(vec.size()));
+
+    std::unordered_map<std::string, std::size_t> cat_idx;
+    for (std::size_t j = 0; j < categories.size(); ++j) {
+        cat_idx[categories[j]] = j;
+    }
+
+    for (std::size_t i = 0; i < vec.size(); ++i) {
+        auto hit = cat_idx.find(vec[i]);
+        if (hit != cat_idx.end()) {
+            new_cols[hit->second][i] = true;
+        }
+    }
+
+    categories = get_new_Headers(column, categories);
+    remove_Spalte(column);
+    add_Spalte(categories, std::move(get_new_cols_from_one_hot(std::move(new_cols))));
+}
+
+std::vector<std::string> DataMatrix::get_new_Headers(const std::string& column, std::vector<std::string>& new_headers) const {
+    for(auto& title : new_headers) {
+        title = column + " : " + title;
+    }
+    return new_headers;
+}
+
+std::vector<std::unique_ptr<Spalte>> DataMatrix::get_new_cols_from_one_hot(const std::vector<std::vector<bool>>&& new_cols) const {
+    std::vector<std::unique_ptr<Spalte>> cols_to_add;
+    cols_to_add.reserve(new_cols.size());
+    for(auto& col : new_cols) {
+        cols_to_add.push_back(std::make_unique<TypedSpalte<bool>>(std::move(col), Column_Type::Bool));
+    }
+    return cols_to_add;
+}
+
+

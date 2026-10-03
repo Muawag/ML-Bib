@@ -14,6 +14,8 @@
 int main() {
     DataMatrix csv_matrix = CSVLoader::load_CSV("iris.csv");
     csv_matrix.print_Matrix();
+    //csv_matrix.one_hot_encode("species", {"setosa"});
+    //csv_matrix.print_Matrix();
     auto[train_daten, test_daten] = TrainTestSplit::split(csv_matrix, 0.8, "species");
     DataMatrix predict_y = train_daten.get_Spalte_as_Matrix_and_Drop("species");
     Matrix x_daten_train(train_daten);
