@@ -253,4 +253,11 @@ std::vector<std::unique_ptr<Spalte>> DataMatrix::get_new_cols_from_one_hot(const
     return cols_to_add;
 }
 
+void DataMatrix::print_Header() const {
+    for(auto& col : header_) {
+        std::cout << col << "\t";
+    }
+    std::cout << std::endl;
+}
+
 

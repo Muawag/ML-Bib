@@ -12,11 +12,18 @@ bool is_Bool(const std::string& s);
 bool to_Bool(const std::string& s); 
 std::unique_ptr<Spalte> make_Column(const std::vector<std::string>& col);
 
-DataMatrix CSVLoader::load_CSV(const std::string path) {
+DataMatrix CSVLoader::load_CSV(const std::string path, bool header_vorhanden) {
     std::vector<std::vector<std::string>> matrix = get_CSV_as_Matrix(path);
     std::vector<std::string> header;
-    for (size_t i = 0; i < matrix.size(); ++i) {
-        header.push_back(matrix[i].at(0));
+    if(header_vorhanden) {
+        for (size_t i = 0; i < matrix.size(); ++i) {
+            header.push_back(matrix[i].at(0));
+        }
+    }
+    else {
+        for(size_t i = 0; i < matrix.size(); ++i) {
+            header.push_back(std::to_string(i));
+        }
     }
     std::vector<std::unique_ptr<Spalte>> d_matrix;
 

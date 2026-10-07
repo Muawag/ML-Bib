@@ -13,8 +13,6 @@ PCA::PCA() {
 
 void PCA::train(const Matrix& m, double threshold) {
     Matrix train_matrix = m;
-    //means_ = get_Spaltenmittelwerte(m);
-    //train_matrix = zentrieren(train_matrix, means_);
     SVD_Matrizen matricies = SVD::svd(train_matrix);
     cum_var = cumulative_variance(matricies.Sigma);
     k = get_k(cum_var, threshold);

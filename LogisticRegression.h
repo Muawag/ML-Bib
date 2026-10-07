@@ -12,6 +12,10 @@
 template <typename T>
 class LogisticRegression : public Classifier<T> {
     public:
+        LogisticRegression(const int epochen = 200, const double lr = 0.05, const int batch_size = 32) : epochen(epochen), lr(lr), batch_size(batch_size) {
+
+        }
+
         DataMatrix predict(const Matrix& predict_daten) const override {
             std::vector<T> result;
             result.reserve(predict_daten.get_Size().rows);
@@ -25,7 +29,7 @@ class LogisticRegression : public Classifier<T> {
             return ret_matrix;
         }
 
-        void train(const Matrix& x_daten, const DataMatrix& y_daten, int epochen = 200, double lr = 0.05, int batch_size = 32) override {
+        void train(const Matrix& x_daten, const DataMatrix& y_daten) override {
             auto [y_matrix, type_key, class_map, k] = Utility::y_DataMatrix_Converter<T>(y_daten);
             possible_Classes_Count_ = k;
             possible_Classes = class_map;
@@ -138,5 +142,8 @@ class LogisticRegression : public Classifier<T> {
             int possible_Classes_Count_;
             Matrix weights;
             Matrix bias;
+            int epochen;
+            int batch_size;
+            double lr;
             
 };

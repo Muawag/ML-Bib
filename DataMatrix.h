@@ -105,6 +105,7 @@ class DataMatrix {
         std::vector<std::string> get_Column_as_String_vec(const std::string& title) const;
         std::vector<std::string> get_Column_as_String_vec(std::size_t index) const;
         void one_hot_encode(const std::string& column, const std::vector<std::string>& eligible_cols = {});
+        void print_Header() const;
     private:
         void update_Matrix_Size();
         std::vector<std::string> get_new_Headers(const std::string& column, std::vector<std::string>& new_headers) const;
