@@ -32,8 +32,8 @@ int main() {
     Matrix pca_x_test = pca.apply(x_scaled_test);
    
 
-    LogisticRegression<std::string> logReg;
-    logReg.train(pca_x_train, predict_y, 2000, 0.2, 42);
+    LogisticRegression<std::string> logReg(2000, 0.2, 42);
+    logReg.train(pca_x_train, predict_y);
     DataMatrix test_res_vec = logReg.predict(pca_x_test);
 
     std::cout << "Accuracy: " << Metrik::accuracy(predict_y_test, test_res_vec) << std::endl;

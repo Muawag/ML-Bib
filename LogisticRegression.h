@@ -102,7 +102,6 @@ class LogisticRegression : public Classifier<T> {
                     bias -= n * db;
                 }
             }
-            bias.print_Matrix();
         }
 
         std::tuple<Matrix, Matrix> gradient(const Matrix& x_Batch, const Matrix& y_Batch) {
