@@ -15,23 +15,24 @@
 template <typename T, typename Kernel>
 class SVM : public Classifier<T>{
 
-    SVM(const double C, const double tol, const std::size_t max_passes, Kernel k) : C(C), tol(tol), max_passes(max_passes),
-    kernel_Funtion(std::move(k)) {
+    public:
+        SVM(const double C, const double tol, const std::size_t max_passes, Kernel k) : C(C), tol(tol), max_passes(max_passes),
+        kernel_Funtion(std::move(k)) {
 
-    }
+        }
 
-    DataMatrix predict(const Matrix& predict_daten) const override{
-        return nullptr;
-    }
+        DataMatrix predict(const Matrix& predict_daten) const override{
+            return nullptr;
+        }
 
-    void train(const Matrix& x_Daten, const DataMatrix& y_Daten) override{
-        auto [y_Matrix, type_Key, class_Map, k] = Utility::y_DataMatrix_Converter<T>(y_Daten);
-        y = y_Matrix;
-        label_to_int = type_Key;
-        int_to_label = class_Map;
-        possible_classes_count = k;
-        Matrix x_vecs = x_Daten;
-    }
+        void train(const Matrix& x_Daten, const DataMatrix& y_Daten) override{
+            auto [y_Matrix, type_Key, class_Map, k] = Utility::y_DataMatrix_Converter<T>(y_Daten);
+            y = y_Matrix;
+            label_to_int = type_Key;
+            int_to_label = class_Map;
+            possible_classes_count = k;
+            Matrix x_vecs = x_Daten;
+        }
 
 
     private:
@@ -56,11 +57,11 @@ class SVM : public Classifier<T>{
         }
 
         double update_a_j(std::size_t i, std::size_t j) {
-            return a[j][0] + ((y[i][0] * (error(i) - error(j))) / n_Val(i,j));
+            return a[j][0] + ((y[j][0] * (error(i) - error(j))) / n_Val(i,j));
         }
 
         double update_a_i(std::size_t i, std::size_t j, double a_j_alt) {
-            return a[i][0] + y[i][0] * y[j][0] (a_j_alt - a[j][0]);
+            return a[i][0] + y[i][0] * y[j][0] * (a_j_alt - a[j][0]);
         }
 
         void setup_Kernel_Matrix() {
@@ -92,7 +93,7 @@ class SVM : public Classifier<T>{
             for(std::size_t i = 0 ; i < x.get_Size().rows; ++i) {
                 if(i != r || i != s) sum += a[i][0] * y[i][0];
             }
-            retrun -sum;
+            return -sum;
         }
 
         double help_func_Bound1(std::size_t r, std::size_t s) {
@@ -113,4 +114,6 @@ class SVM : public Classifier<T>{
         int possible_classes_count;
         Matrix kernelMatrix;
         Kernel kernel_Funtion;
+        double to;
+        int max_passes;
 };
