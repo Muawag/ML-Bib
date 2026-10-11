@@ -47,9 +47,9 @@ class SVM : public Classifier<T>{
         double hyperebenen_Gleichung(std::size_t index) {
             double sum = 0.0;
             for(std::size_t i = 0; i < x.get_Size().rows; ++i) {
-                sum += (a[i][0] * y[i][0] * kernelMatrix[i][index] + b) - y[index][0];
+                sum += (a[i][0] * y[i][0] * kernelMatrix[i][index]);
             }
-            return sum;
+            return sum + b;
         }
 
         double n_Val(std::size_t i, std::size_t j) {
@@ -91,7 +91,7 @@ class SVM : public Classifier<T>{
         double help_sum(std::size_t r, std::size_t s) {
             double sum = 0;
             for(std::size_t i = 0 ; i < x.get_Size().rows; ++i) {
-                if(i != r || i != s) sum += a[i][0] * y[i][0];
+                if(i != r && i != s) sum += a[i][0] * y[i][0];
             }
             return -sum;
         }
@@ -103,6 +103,19 @@ class SVM : public Classifier<T>{
         double help_func_Bound2(std::size_t r, std::size_t s) {
             return y[r][0] * help_sum(r, s);
         }
+
+        void update_b(double error_i, double error_j, double a_i_alt, double a_j_alt, std::size_t i, std::size_t j) {
+            double b1 = b - error_i - y[i][0] * (a[i][0] - a_i_alt) * kernelMatrix[i][i] - 
+                y[j][0] * (a[j][0] - a_j_alt) * kernelMatrix[i][j];
+
+            double b2 = b - error_j - y[i][0] * (a[i][0] - a_i_alt) * kernelMatrix[i][j] - 
+                y[j][0] * (a[j][0] - a_j_alt) * kernelMatrix[j][j];
+
+            if(0 < a[i][0] && a[i][0] < C) b = b1;
+            else if(0 < a[j][0] && a[j][0] < C) b = b2;
+            else b = (b1 + b2) / 2;
+        }
+
     private:
         Matrix a; // Lagrange Multiplier der support vektoren
         std::map<T, std::size_t> label_to_int;
