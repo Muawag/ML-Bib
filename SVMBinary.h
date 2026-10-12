@@ -13,21 +13,20 @@
 
 
 template <typename T, typename Kernel>
-class SVM : public Classifier<T>{
+class SVMBinary : public Classifier<T>{
 
     public:
-        SVM(const double C, const double tol, const std::size_t max_passes, Kernel k) : C(C), tol(tol), max_passes(max_passes),
-        kernel_Funtion(std::move(k)) {
+        SVMBinary(const double C, const double tol, const std::size_t max_passes, Kernel k, T aim_type) : C(C), tol(tol), max_passes(max_passes),
+        kernel_Funktion(std::move(k)), aim_type(aim_type) {
 
         }
 
         DataMatrix predict(const Matrix& predict_daten) const override{
             std::vector<T> result_vec(predict_daten.get_Size().rows);
             for(std::size_t i = 0; i < result_vec.size(); ++i) {
-                int res_numeric = predict_single(predict_daten[i]) > 0 ? 1 : -1;
-                result_vec[i] = int_to_label.at(res_numeric);
+                result_vec[i] = (predict_single(predict_daten[i]) > 0.0) ? aim_type : other_type;
             }
-            return DataMatrix<T>("Predicted Values" , std::move(result_vec));
+            return DataMatrix("Predicted Values" , std::move(result_vec));
         }
 
         Matrix get_predicted_Values(const Matrix& predict_daten) const {
@@ -41,16 +40,27 @@ class SVM : public Classifier<T>{
 
         void train(const Matrix& x_Daten, const DataMatrix& y_Daten) override{
             auto [y_Matrix, type_Key, class_Map, k] = Utility::y_DataMatrix_Converter<T>(y_Daten);
-            y = y_Matrix;
+            y = Utility::y_DataMatrix_Converter_SVM<T>(y_Daten, aim_type);
+            other_type = (class_Map.at(0) == aim_type) ? class_Map.at(1) : class_Map.at(0);
             label_to_int = type_Key;
             int_to_label = class_Map;
             possible_classes_count = k;
+            if(k != 2) throw std::runtime_error("Muss binäre klassifikation sein");
             x = x_Daten;
             setup_Kernel_Matrix();
             a = Matrix::get_Matrix_With_Value(y.get_Size(), 0.0);
+            b = 0.0;
             optimize();
         }
 
+        void train_one_vs_rest(const Matrix& x_daten, const DataMatrix& y_daten, const T& positive) {
+            y = Utility::y_DataMatrix_Converter_SVM<T>(y_daten, positive);
+            x = x_daten;
+            a = Matrix::get_Matrix_With_Value(y.get_Size(), 0.0);
+            b = 0.0;
+            setup_Kernel_Matrix();
+            optimize();
+        }
 
 
     private:
@@ -182,8 +192,8 @@ class SVM : public Classifier<T>{
 
     private:
         Matrix a; // Lagrange Multiplier der support vektoren
-        std::map<T, std::size_t> label_to_int;
-        std::map<std::size_t, T> int_to_label; 
+        std::map<T, int> label_to_int;
+        std::map<int, T> int_to_label; 
         double C; // Obere Schranke der as
         Matrix x; // Matrix aus allen support vektoren
         Matrix y; // Vektor aus den dazugehörigen labels
@@ -193,4 +203,6 @@ class SVM : public Classifier<T>{
         Kernel kernel_Funktion;
         double tol;
         int max_passes;
+        T aim_type;
+        T other_type;
 };

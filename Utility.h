@@ -7,6 +7,7 @@
 #include <vector>
 #include <tuple>
 #include <map>
+#include <stdexcept>
 
 class Utility {
     public:
@@ -30,10 +31,20 @@ class Utility {
         }
 
         template<typename T> 
-        static std::tuple<Matrix, std::map<T, int>, std::map<int, T>, int> y_DataMatrix_Converter_SVM(const DataMatrix& y_daten, T specific_class) {
+        static Matrix y_DataMatrix_Converter_SVM(const DataMatrix& y_daten, T specific_class) {
             Matrix result(y_daten.get_Size());
-            std::map<T, int> result_map_type;
-            std::map<int, T> result_map_index;
+            bool specific_found = false;
+            TypedSpalte<T>* spalte = y_daten.get_Spalte<T>(0);
+            for(std::size_t i = 0 ; i < spalte->size(); ++i) {
+                if((*spalte)[i] == specific_class) {
+                    specific_found = true;
+                    result[i][0] = 1;
+                    continue;
+                }
+                result[i][0] = -1;
+            }
+            if(!specific_found) throw std::runtime_error("Übergebene Klasse war nicht vorhanden");
+            return result;
         }
 
 
