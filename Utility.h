@@ -28,4 +28,14 @@ class Utility {
             }
             return {result, result_map_type, result_map_class, class_count};
         }
+
+        template<typename T> 
+        static std::tuple<Matrix, std::map<T, int>, std::map<int, T>, int> y_DataMatrix_Converter_SVM(const DataMatrix& y_daten, T specific_class) {
+            Matrix result(y_daten.get_Size());
+            std::map<T, int> result_map_type;
+            std::map<int, T> result_map_index;
+        }
+
+
+        static Matrix prepare_SVM_Matrix(const Matrix& labels, const int index); 
 };

@@ -27,3 +27,11 @@
         }
         return result;
     }
+
+    Matrix Utility::prepare_SVM_Matrix(const Matrix& y_Daten, const int index) {
+        Matrix y_result(y_Daten.get_Size());
+        for(std::size_t i = 0; i < y_Daten.get_Size().rows; ++i) {
+            y_result[i][0] = (y_Daten[i][0] == index) ? 1: -1;
+        }
+        return y_result;
+    }

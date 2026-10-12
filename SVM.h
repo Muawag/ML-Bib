@@ -22,7 +22,21 @@ class SVM : public Classifier<T>{
         }
 
         DataMatrix predict(const Matrix& predict_daten) const override{
-            return nullptr;
+            std::vector<T> result_vec(predict_daten.get_Size().rows);
+            for(std::size_t i = 0; i < result_vec.size(); ++i) {
+                int res_numeric = predict_single(predict_daten[i]) > 0 ? 1 : -1;
+                result_vec[i] = int_to_label.at(res_numeric);
+            }
+            return DataMatrix<T>("Predicted Values" , std::move(result_vec));
+        }
+
+        Matrix get_predicted_Values(const Matrix& predict_daten) const {
+            std::size_t n = predict_daten.get_Size().rows;
+            Matrix result(n, 1);
+            for(std::size_t i = 0; i < n; ++i) {
+                result[i][0] = predict_single(predict_daten[i]);
+            }
+            return result;
         }
 
         void train(const Matrix& x_Daten, const DataMatrix& y_Daten) override{
@@ -31,8 +45,12 @@ class SVM : public Classifier<T>{
             label_to_int = type_Key;
             int_to_label = class_Map;
             possible_classes_count = k;
-            Matrix x_vecs = x_Daten;
+            x = x_Daten;
+            setup_Kernel_Matrix();
+            a = Matrix::get_Matrix_With_Value(y.get_Size(), 0.0);
+            optimize();
         }
+
 
 
     private:
@@ -87,6 +105,15 @@ class SVM : public Classifier<T>{
                 sum += (a[i][0] * y[i][0] * kernelMatrix[i][index]);
             }
             return sum + b;
+        }
+
+        double predict_single(const std::vector<double>& x_vec) const{
+            double sum = b;
+            for(std::size_t i = 0; i < x.get_Size().rows; ++i) {
+                if(a[i][0] < 1e-8) continue;
+                sum += a[i][0] * y[i][0] * kernel_Funktion(x[i], x_vec);
+            }
+            return sum;
         }
 
         double n_Val(std::size_t i, std::size_t j) {
@@ -163,7 +190,7 @@ class SVM : public Classifier<T>{
         double b = 0.0;
         int possible_classes_count;
         Matrix kernelMatrix;
-        Kernel kernel_Funtion;
+        Kernel kernel_Funktion;
         double tol;
         int max_passes;
 };
