@@ -37,7 +37,44 @@ class SVM : public Classifier<T>{
 
     private:
         void optimize() {
+            std::size_t passes = 0;
+            std::size_t n = x.get_Size().rows;
+            while(passes < max_passes) {
+                std::size_t changed = 0;
+                for(std::size_t i = 0; i < n; ++i) {
+                    double E_i = error(i);
 
+                    bool kkt_verletzt = (y[i][0] * E_i < -tol && a[i][0] < C) ||
+                        (y[i][0] * E_i > tol && a[i][0] > 0);
+                    
+                    if(!kkt_verletzt) continue;
+
+                    std::size_t j = std::rand() % (n - 1);
+                    if(j >= i) ++j;
+
+                    double E_j = error(j);
+
+                    double a_i_alt = a[i][0];
+                    double a_j_alt = a[j][0];
+
+                    double eta = n_Val(i,j);
+                    if(eta <= 0) continue;
+
+                    a[j][0] = update_a_j(i,j, E_i, E_j);
+                    set_Between_Boundaries(j,i);
+
+                    if(std::abs(a[j][0] - a_j_alt) < 1e-5) {
+                        a[j][0] = a_j_alt;
+                        continue;
+                    }
+
+                    a[i][0] = update_a_i(i,j, a_j_alt);
+                    update_b(E_i, E_j, a_i_alt, a_j_alt, i, j);
+                    changed++;
+
+                }
+                passes = (changed > 0) ? 0 : passes + 1;
+            }
         }
         double error(std::size_t index) {
             double result = 0;
@@ -56,8 +93,8 @@ class SVM : public Classifier<T>{
             return kernelMatrix[i][i] + kernelMatrix[j][j] - (2 * kernelMatrix[i][j]); 
         }
 
-        double update_a_j(std::size_t i, std::size_t j) {
-            return a[j][0] + ((y[j][0] * (error(i) - error(j))) / n_Val(i,j));
+        double update_a_j(std::size_t i, std::size_t j, double E_i, double E_j) {
+            return a[j][0] + ((y[j][0] * (E_i - E_j)) / n_Val(i,j));
         }
 
         double update_a_i(std::size_t i, std::size_t j, double a_j_alt) {
@@ -127,6 +164,6 @@ class SVM : public Classifier<T>{
         int possible_classes_count;
         Matrix kernelMatrix;
         Kernel kernel_Funtion;
-        double to;
+        double tol;
         int max_passes;
 };

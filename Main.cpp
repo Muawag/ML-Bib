@@ -30,6 +30,7 @@ int main() {
     PCA pca;
     Matrix pca_x_train = pca.train_apply(x_scaled_train);
     Matrix pca_x_test = pca.apply(x_scaled_test);
+    pca_x_train.print_Matrix();
    
 
     LogisticRegression<std::string> logReg(2000, 0.2, 42);
