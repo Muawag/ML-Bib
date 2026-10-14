@@ -17,10 +17,11 @@ class SVMBinary : public Classifier<T>{
 
     public:
         SVMBinary(const double C, const double tol, const std::size_t max_passes, Kernel k, T aim_type) : C(C), tol(tol), max_passes(max_passes),
-        kernel_Funktion(std::move(k)), aim_type(aim_type) {
+        kernel_Funktion(std::move(k)), aim_type(aim_type) {}
 
-        }
-
+        SVMBinary(const double C, const double tol, const std::size_t max_passes, Kernel k) : C(C), tol(tol),
+        max_passes(max_passes), kernel_Funktion(std::move(k)) {}
+        
         DataMatrix predict(const Matrix& predict_daten) const override{
             std::vector<T> result_vec(predict_daten.get_Size().rows);
             for(std::size_t i = 0; i < result_vec.size(); ++i) {
