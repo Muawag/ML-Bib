@@ -106,6 +106,12 @@ class DataMatrix {
         std::vector<std::string> get_Column_as_String_vec(std::size_t index) const;
         void one_hot_encode(const std::string& column, const std::vector<std::string>& eligible_cols = {});
         void print_Header() const;
+        template<typename T>
+        static DataMatrix make_single_col_vec(const std::string& title, std::vector<T>&& values) {
+            std::vector<std::unique_ptr<Spalte>> spalten;
+            spalten.push_back(std::make_unique<TypedSpalte<T>>(std::move(values)));
+            return DataMatrix({title}, std::move(spalten));
+        }
     private:
         void update_Matrix_Size();
         std::vector<std::string> get_new_Headers(const std::string& column, std::vector<std::string>& new_headers) const;

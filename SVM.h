@@ -7,49 +7,51 @@
 #include "Classifier.h"
 #include "DataMatrix.h"
 #include "Utility.h"
+#include <limits>
 
 
 template<typename T, typename Kernel>
 class SVM : public Classifier<T> {
     public:
         SVM(const double C, const double tol, std::size_t max_passes, Kernel k) : C(C), tol(tol), 
-            max_passes(max_passes), kernel_function(k) {
-            }
+            max_passes(max_passes), kernel_function(k) {}
 
-        
         void train(const Matrix& x_daten, const DataMatrix& y_daten) override {
-            auto[y_daten_irr, label_to_index, index_to_label, possible_classes] = Utility::y_DataMatrix_Converter(y_daten);
+            svm_vec.clear();
+            auto[y_daten_irr, l2i, i2l, classes] = Utility::y_DataMatrix_Converter<T>(y_daten);
+            label_to_index = std::move(l2i);
+            index_to_label = std::move(i2l);
+            possible_classes = classes;
             for(std::size_t i = 0; i < possible_classes; ++i) {
                 SVMBinary<T, Kernel> svm(C, tol, max_passes, kernel_function);
                 svm.train_one_vs_rest(x_daten, y_daten, index_to_label.at(i));
-                svm_vec.push_back(svm);
+                svm_vec.emplace_back(svm);
             }
         }
 
         DataMatrix predict(const Matrix& x_predict) const override {
-            std::vector<Matrix> predicted_probs(x_predict.get_Size().rows);
+            std::vector<Matrix> scores(possible_classes);
             for(int i = 0; i < possible_classes; ++i) {
-                predicted_probs[i] = svm_vec[i].get_predicted_Values(x_predict);
+                scores[i] = svm_vec[i].get_predicted_Values(x_predict);
             }
 
             std::vector<T> predict_vec(x_predict.get_Size().rows);
             for(std::size_t i = 0; i < x_predict.get_Size().rows; ++i){
-                double max_prob = 0.0;
+                double max_prob = -std::numeric_limits<double>::infinity();
                 int index = 0;
-                for(std::size_t j = 0; j < predicted_probs.size(); ++j) {
-                    if(predicted_probs[j] >= max_prob) {
-                        max_prob = predicted_probs[j];
+                for(std::size_t j = 0; j < possible_classes; ++j) {
+                    if(scores[j][i][0] >= max_prob) {
+                        max_prob = scores[j][i][0];
                         index = j;
                     }
                 }
                 predict_vec[i] = index_to_label.at(index);
             }
-
-            return DataMatrix({"Predicted Vals"}, std::move(predict_vec));
+            return DataMatrix::make_single_col_vec("Predicted Values", std::move(predict_vec));
         }
 
         Matrix predict_proba(const Matrix& x_predict) const override {
-            return Matrix::identity(2); // Nur Vollständigkeitshalber
+            throw std::logic_error("SVMBinary::predict_proba ist nicht implementiert");
         }
         
     private:

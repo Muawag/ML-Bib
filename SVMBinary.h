@@ -27,7 +27,7 @@ class SVMBinary : public Classifier<T>{
             for(std::size_t i = 0; i < result_vec.size(); ++i) {
                 result_vec[i] = (predict_single(predict_daten[i]) > 0.0) ? aim_type : other_type;
             }
-            return DataMatrix("Predicted Values" , std::move(result_vec));
+            return DataMatrix::make_single_col_vec("Predict Values", std::move(result_vec));
         }
 
         Matrix get_predicted_Values(const Matrix& predict_daten) const {
@@ -61,6 +61,10 @@ class SVMBinary : public Classifier<T>{
             b = 0.0;
             setup_Kernel_Matrix();
             optimize();
+        }
+
+        Matrix predict_proba(const Matrix& predict_daten) const override {
+            throw std::logic_error("SVMBinary::predict_proba ist nicht implementiert");
         }
 
 
@@ -105,12 +109,12 @@ class SVMBinary : public Classifier<T>{
                 passes = (changed > 0) ? 0 : passes + 1;
             }
         }
-        double error(std::size_t index) {
+        double error(std::size_t index) const {
             double result = 0;
             return hyperebenen_Gleichung(index) - y[index][0];
         }
 
-        double hyperebenen_Gleichung(std::size_t index) {
+        double hyperebenen_Gleichung(std::size_t index) const {
             double sum = 0.0;
             for(std::size_t i = 0; i < x.get_Size().rows; ++i) {
                 sum += (a[i][0] * y[i][0] * kernelMatrix[i][index]);
@@ -203,7 +207,7 @@ class SVMBinary : public Classifier<T>{
         Matrix kernelMatrix;
         Kernel kernel_Funktion;
         double tol;
-        int max_passes;
+        std::size_t max_passes;
         T aim_type;
         T other_type;
 };

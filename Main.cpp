@@ -9,6 +9,8 @@
 #include "LogisticRegression.h"
 #include "TrainTestSplit.h"
 #include "Metrik.h"
+#include "SVM.h"
+#include "Kernel.h"
 
 
 int main() {
@@ -33,7 +35,7 @@ int main() {
     pca_x_train.print_Matrix();
    
 
-    LogisticRegression<std::string> logReg(2000, 0.2, 42);
+    /*LogisticRegression<std::string> logReg(2000, 0.2, 42);
     logReg.train(pca_x_train, predict_y);
     DataMatrix test_res_vec = logReg.predict(pca_x_test);
 
@@ -65,4 +67,10 @@ int main() {
     //predict_y_test.print_Matrix();
     //predict_logreg.print_Matrix();
     */
+
+    SVM<std::string, RBFKernel> svm(1.0, 1e-3, 10, RBFKernel());
+    svm.train(pca_x_train, predict_y);
+    DataMatrix test_res_vec = svm.predict(pca_x_test);
+
+    std::cout << "Accuracy: " << Metrik::accuracy(predict_y_test, test_res_vec) << std::endl;
 }
