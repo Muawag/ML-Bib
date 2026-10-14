@@ -31,16 +31,26 @@ class SVM : public Classifier<T> {
             for(int i = 0; i < possible_classes; ++i) {
                 predicted_probs[i] = svm_vec[i].get_predicted_Values(x_predict);
             }
+
+            std::vector<T> predict_vec(x_predict.get_Size().rows);
+            for(std::size_t i = 0; i < x_predict.get_Size().rows; ++i){
+                double max_prob = 0.0;
+                int index = 0;
+                for(std::size_t j = 0; j < predicted_probs.size(); ++j) {
+                    if(predicted_probs[j] >= max_prob) {
+                        max_prob = predicted_probs[j];
+                        index = j;
+                    }
+                }
+                predict_vec[i] = index_to_label.at(index);
+            }
+
+            return DataMatrix({"Predicted Vals"}, std::move(predict_vec));
         }
 
         Matrix predict_proba(const Matrix& x_predict) const override {
+            return Matrix::identity(2); // Nur Vollständigkeitshalber
         }
-
-    private:
-        void setup_Binary_SVMs() {
-            
-        }
-
         
     private:
         std::vector<SVMBinary<T, Kernel>> svm_vec;
