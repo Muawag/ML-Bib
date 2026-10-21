@@ -5,6 +5,7 @@
 #include "NumberDataMatrix.h"
 #include <vector>
 #include "DataMatrix.h"
+#include <span>
 
 
 class Matrix {
@@ -24,8 +25,8 @@ class Matrix {
         Matrix operator*(const Matrix& m2) const;
         Matrix& operator-=(const Matrix& other);
         Matrix_Size get_Size() const;
-        std::vector<double>& operator[](std::size_t index);
-        const std::vector<double>& operator[](std::size_t index) const;
+        std::span<double> operator[](std::size_t index);
+        std::span<const double> operator[](std::size_t index) const;
         void print_Matrix() const;
 
         template<typename T>
@@ -71,7 +72,11 @@ class Matrix {
         bool is_scaled() const;
 
     private:
+        void initialize_Matrix_Vector();
+    
+    private:
         std::vector<std::vector<double>> matrix_;
+        std::vector<double> matrix_as_vec;
         Matrix_Size size_;
         bool scaled;
         //bool is_Diagonal_;

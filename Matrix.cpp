@@ -9,66 +9,58 @@ Matrix::Matrix(int rows, int cols) {
     size_.rows = rows;
     size_.cols = cols;
     scaled = false;
-    matrix_.resize(rows, std::vector<double>(cols, 0.0));
+    //matrix_.resize(rows, std::vector<double>(cols, 0.0));
+    matrix_as_vec.resize(rows * cols , 0.0);
 }
 
 Matrix::Matrix(const Matrix_Size& size) : size_(size) {
     scaled = false;
-    matrix_.resize(size.rows, std::vector<double>(size.cols, 0.0));
+    //matrix_.resize(size.rows, std::vector<double>(size.cols, 0.0));
+    matrix_as_vec.resize(size.rows * size.cols, 0.0);
 }
-Matrix::Matrix(const std::vector<std::vector<double>>& vecs) {
+Matrix::Matrix(const std::vector<std::vector<double>>& vecs) : scaled(false) {
     if(vecs.empty()) {
         size_.rows = 0;
         size_.cols = 0;
         scaled = false;
         return;
     }
-    scaled = false;
     size_.rows = vecs.size();
     size_.cols = vecs.at(0).size();
-    matrix_.resize(size_.rows);
-    for(int i = 0; i <  size_.rows; ++i) {
-        if(vecs[i].size() != size_.cols) {
-            throw std::runtime_error("Alle Zeilen der Matrix muessen gleich gross sein");
-        }
-        matrix_[i] = vecs[i];
+    matrix_as_vec.reserve(size_.rows * size_.cols);
+    for(std::size_t i = 0; i < size_.rows; ++i) {
+        if(vecs[i].size() != size_.cols) throw std::runtime_error("Zeilen muessen alle gleich gross sein");
+        matrix_as_vec.insert(matrix_as_vec.end(), vecs[i].begin(), vecs[i].end());
     }
 }
 
-Matrix::Matrix(const DataMatrix& d) {
+Matrix::Matrix(const DataMatrix& d) : scaled(false) {
     if(!d.only_Numbers()) {
         throw std::runtime_error("Datamatrix darf nur numerische Einträge haben");
     }
     size_ = d.get_Size();
-    scaled = false;
-    if(size_.rows == 0) {
-        std::cerr << "Datamatrix war leer" << std::endl;
-        return;
-    }
-    matrix_.resize(size_.rows);
-    for(auto& row : matrix_) {
-        row.resize(size_.cols);
-    }
+    if(size_.rows == 0) throw std::runtime_error("Datenmatrix war leer");
+    matrix_as_vec.resize(size_.rows * size_.cols);
+    const auto& raw = d.get_Raw();
     for(std::size_t i = 0; i < size_.rows; ++i) {
         for(std::size_t j = 0; j < size_.cols; ++j) {
-            matrix_[i][j] = d.get_Raw()[j]->get_Element_as_Double(i);
+            matrix_as_vec[i * size_.cols + j] = raw[j]->get_Element_as_Double(i);
         }
     }
 }
 
-Matrix::Matrix(int rows, int cols, double value) {
-    scaled = false;
+Matrix::Matrix(int rows, int cols, double value) : scaled(false) {
     size_.rows = rows;
     size_.cols = cols;
-    matrix_.resize(rows, std::vector<double>(cols, value));
+    matrix_as_vec.resize(rows * cols , value);
 }
 
-std::vector<double>& Matrix::operator[](std::size_t row) {
-    return matrix_[row];
+std::span<double> Matrix::operator[](std::size_t row) {
+    return { matrix_as_vec.data() + row * size_.cols , size_.cols };
 }
 
-const std::vector<double>& Matrix::operator[](std::size_t row) const{
-    return matrix_[row];
+std::span<const double> Matrix::operator[](std::size_t row) const{
+    return { matrix_as_vec.data() + row * size_.cols , size_.cols };
 }
 
 Matrix Matrix::identity(std::size_t n) {
@@ -81,14 +73,7 @@ Matrix Matrix::identity(std::size_t n) {
 
 Matrix Matrix::from_Vector(const std::vector<double>& vec, bool transpose) {
     Matrix m = transpose? Matrix(1, vec.size()) : Matrix(vec.size(), 1);
-    if(!transpose) {
-        for(std::size_t i = 0; i < m.size_.rows; ++i) {
-            m.matrix_[i][0] = vec[i];
-        }
-    }
-    else{
-        m.matrix_[0] = vec;
-    }
+    m.matrix_as_vec = vec;
     return m;
 }
 
@@ -101,10 +86,8 @@ Matrix Matrix::operator+(const Matrix& m2) const{
         throw std::runtime_error("Matrizen muessen zum Addieren gleiche Groesse haben");
     }
     Matrix result(m2.size_.rows, m2.size_.cols);
-    for(std::size_t i = 0; i < this->size_.rows; ++i) {
-        for(std::size_t j = 0; j < this->size_.cols; ++j) {
-            result.matrix_[i][j] = matrix_[i][j] + m2.matrix_[i][j];
-        }
+    for(std::size_t k = 0; k < this->matrix_as_vec.size(); ++k) {
+       result.matrix_as_vec[k] = this->matrix_as_vec[k] + m2.matrix_as_vec[k]; 
     }
     return result;
 }
@@ -120,20 +103,25 @@ const std::vector<double> Matrix::get_Column(std::size_t index) const {
     std::vector<double> ret;
     ret.reserve(size_.rows);
     for(std::size_t i = 0; i < size_.rows; ++i) {
-        ret.push_back((*this)[i][index]);
+        ret.push_back(matrix_as_vec[i * size_.cols + index]);
     }
     return ret;
 }
 
 Matrix Matrix::operator*(const Matrix& m2) const {
-    if(this->size_.cols != m2.size_.rows) {
-        throw std::runtime_error("Matrizen muessen zum Multiplizieren gleich gross sein");
+    if (size_.cols != m2.size_.rows) {
+        throw std::runtime_error("Spaltenzahl der linken Matrix muss der Zeilenzahl der rechten entsprechen");
     }
-    Matrix result(this->size_.rows, m2.size_.cols);
-     for(std::size_t i = 0; i < this->size_.rows; ++i) {
-        for(std::size_t k = 0; k < this->size_.cols; ++k) {
-            for(std::size_t j = 0; j < m2.size_.cols; ++j) {
-                result.matrix_[i][j] += this->matrix_[i][k] * m2.matrix_[k][j];
+    const std::size_t n = size_.rows;
+    const std::size_t m = size_.cols;      
+    const std::size_t p = m2.size_.cols;
+
+    Matrix result(n, p);
+    for (std::size_t i = 0; i < n; ++i) {
+        for (std::size_t k = 0; k < m; ++k) {
+            const double a = matrix_as_vec[i * m + k];
+            for (std::size_t j = 0; j < p; ++j) {
+                result.matrix_as_vec[i * p + j] += a * m2.matrix_as_vec[k * p + j];
             }
         }
     }
@@ -143,7 +131,7 @@ Matrix Matrix::operator*(const Matrix& m2) const {
 void Matrix::print_Matrix() const {
     for(std::size_t i = 0; i < size_.rows; ++i) {
         for(std::size_t j = 0; j < size_.cols; ++j) {
-            std::cout << matrix_[i][j] << "\t"; 
+            std::cout << matrix_as_vec[i * size_.cols + j] << "\t"; 
         }
         std::cout << std::endl;
     }
@@ -153,7 +141,7 @@ Matrix Matrix::transpose() const {
     Matrix result(size_.cols, size_.rows);
     for(std::size_t i = 0; i < size_.rows; ++i) {
         for(std::size_t j = 0; j < size_.cols; ++j) {
-            result[j][i] = matrix_[i][j];
+            result.matrix_as_vec[j * result.size_.cols + i] = matrix_as_vec[i * size_.cols + j];
         }
     }
     return result;
@@ -166,17 +154,18 @@ Matrix Matrix::get_Einheitsvektor(std::size_t size, std::size_t index, bool tran
 }
 
 double Matrix::inner_produkt(const Matrix& m1, const Matrix& m2) {
-    size_t n1 = (m1.size_.rows == 1) ? m1.size_.cols : m1.size_.rows;
-    size_t n2 = (m2.size_.rows == 1) ? m2.size_.cols : m2.size_.rows;
-    
-    if (n1 != n2)
-        throw std::runtime_error("Vektoren muessen gleich gross sein");
+    const bool is_vec1 = (m1.size_.rows == 1 || m1.size_.cols == 1);
+    const bool is_vec2 = (m2.size_.rows == 1 || m2.size_.cols == 1);
+    if (!is_vec1 || !is_vec2) {
+        throw std::runtime_error("Beide Matrizen müssen Vektoren sein");
+    }
+    if (m1.matrix_as_vec.size() != m2.matrix_as_vec.size()) {
+        throw std::runtime_error("Vektoren müssen gleich lang sein");
+    }
 
     double ret = 0.0;
-    for (size_t i = 0; i < n1; ++i) {
-        double v1 = (m1.size_.rows == 1) ? m1.matrix_[0][i] : m1.matrix_[i][0];
-        double v2 = (m2.size_.rows == 1) ? m2.matrix_[0][i] : m2.matrix_[i][0];
-        ret += v1 * v2;
+    for (std::size_t i = 0; i < m1.matrix_as_vec.size(); ++i) {
+        ret += m1.matrix_as_vec[i] * m2.matrix_as_vec[i];
     }
     return ret;
 }
@@ -188,7 +177,7 @@ Matrix Matrix::drop_Spalte(std::size_t index) const {
     Matrix result(size_.rows, size_.cols-1);
     for(std::size_t i = 0; i < result.size_.rows; ++i) {
         for(std::size_t j = 0; j < result.size_.cols; ++j) {
-            result[i][j] = j < index ? matrix_[i][j] : matrix_[i][j+1];
+            result.matrix_as_vec[i * result.size_.cols + j] = j < index ? matrix_as_vec[i * size_.cols + j] : matrix_as_vec[i * size_.cols + j +1];
         }
     }
     return result;
@@ -201,7 +190,7 @@ Matrix Matrix::drop_Zeile(std::size_t index) const {
     Matrix result(size_.rows-1, size_.cols);
     for(std::size_t i = 0; i < result.size_.rows; ++i) {
         for(std::size_t j = 0; j < result.size_.cols; ++j) {
-            result[i][j] = i < index ? matrix_[i][j] : matrix_[i+1][j];
+            result.matrix_as_vec[i * result.size_.cols + j] = i < index ? matrix_as_vec[i * size_.cols + j] : matrix_as_vec[(i+1) * size_.cols + j];
         }
     }
     return result;
@@ -216,7 +205,7 @@ Matrix Matrix::einbetten_u_r(std::size_t size) const {
         for(std::size_t j = size - size_.cols; j < size; ++j) {
             std::size_t row_offset = size - size_.rows;
             std::size_t col_offset = size - size_.cols;
-            result[i][j] = matrix_[i-row_offset][j-col_offset];
+            result.matrix_as_vec[i * result.size_.cols + j] = matrix_as_vec[(i-row_offset) * size_.cols + (j - col_offset)];
         }
     }
     return result;
@@ -330,4 +319,13 @@ bool Matrix::is_scaled() const {
 
 Matrix Matrix::get_Matrix_With_Value(const Matrix_Size& size, double val) {
     return Matrix(size.rows, size.cols, val);
+}
+
+void Matrix::initialize_Matrix_Vector() {
+    matrix_as_vec.resize(size_.rows * size_.cols);
+    for(std::size_t i = 0; i < size_.rows; ++i) {
+        for(std::size_t j = 0; j < size_.cols; ++j) {
+            matrix_as_vec[i * size_.cols + j] = matrix_[i][j];
+        }
+    }
 }

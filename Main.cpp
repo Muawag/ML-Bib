@@ -35,11 +35,11 @@ int main() {
     pca_x_train.print_Matrix();
    
 
-    /*LogisticRegression<std::string> logReg(2000, 0.2, 42);
+    LogisticRegression<std::string> logReg(2000, 0.2, 42);
     logReg.train(pca_x_train, predict_y);
-    DataMatrix test_res_vec = logReg.predict(pca_x_test);
+    DataMatrix test_res_vec_log = logReg.predict(pca_x_test);
 
-    std::cout << "Accuracy: " << Metrik::accuracy(predict_y_test, test_res_vec) << std::endl;
+    std::cout << "Accuracy LogReg: " << Metrik::accuracy(predict_y_test, test_res_vec_log) << std::endl;
     /*
     DataMatrix cutouts = CSVLoader::load_CSV("cutouts.csv", false);
     auto[train_daten, test_daten] = TrainTestSplit::split(cutouts, 0.8, "3072");
@@ -70,7 +70,7 @@ int main() {
 
     SVM<std::string, RBFKernel> svm(1.0, 1e-3, 10, RBFKernel());
     svm.train(pca_x_train, predict_y);
-    DataMatrix test_res_vec = svm.predict(pca_x_test);
+    DataMatrix test_res_vec_svm = svm.predict(pca_x_test);
 
-    std::cout << "Accuracy: " << Metrik::accuracy(predict_y_test, test_res_vec) << std::endl;
+    std::cout << "Accuracy SVM: " << Metrik::accuracy(predict_y_test, test_res_vec_svm) << std::endl;
 }

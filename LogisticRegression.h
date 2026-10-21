@@ -83,13 +83,14 @@ class LogisticRegression : public Classifier<T> {
             return {logits, nenner, max_logit};
         }
 
+        /*
         double negative_log_likleyhood(const Matrix& x_daten, const Matrix& y_daten) const {
             double sum = 0.0;
             for(std::size_t i = 0; i < x_daten.get_Size().rows; ++i) {
                 sum += std::log(probability_Class(possibility_Classes_Type_Key.at(y_daten[i], x_daten[i])));
             }
             return -sum;
-        }
+        }*/
 
         void optimize(const Matrix& x_daten, const Matrix& y_daten, int epochen, double n, int batch_size) {
             weights = Matrix::random({possible_Classes_Count_, x_daten.get_Size().cols}, 0.0, 0.01); 
