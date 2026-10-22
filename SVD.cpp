@@ -58,6 +58,7 @@ Bidiagonalisierte_Matrizen SVD::bidiagonalize(Matrix& m) {
                 bs.push_back(m_neu2[0][0]);
                 m = m_neu2.drop_Zeile(0);
             }
+            std::cout << "Bidig: " << i << std::endl;
         }
         if(!square_Matrix) {
             auto [p, m_neu] = q_r_step_spalte(m);
@@ -117,6 +118,7 @@ Givens_Matrizen SVD::givens_Iteration(Matrix& m) {
             Matrix G_L = Matrix::get_Givens(size.rows, i, m[i][i], m[i+1][i]);
             m = G_L * m;
             U = G_L * U;
+            std::cout << "Bulge: " << i << std::endl;
         }
         ++i;
         bool converged = true;
@@ -134,7 +136,9 @@ Givens_Matrizen SVD::givens_Iteration(Matrix& m) {
 
 SVD_Matrizen SVD::svd(Matrix& m) {
     Matrix_Size size = m.get_Size();
+    std::cout << "Start Bidiagonalize" << std::endl;
     Bidiagonalisierte_Matrizen b = bidiagonalize(m);
+    std::cout << "Start Bulge chasing" << std::endl;
     SVD_Matrizen matricies = get_SVD_From_Bidiagonal(b);
     return clean_up_Svd(size,matricies);
 }

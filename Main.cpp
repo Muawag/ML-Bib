@@ -14,6 +14,7 @@
 
 
 int main() {
+    
     DataMatrix csv_matrix = CSVLoader::load_CSV("iris.csv");
     csv_matrix.print_Matrix();
     //csv_matrix.one_hot_encode("species", {"setosa"});
@@ -52,22 +53,22 @@ int main() {
     StandartScaler scaler;
     train_daten_x = scaler.train_apply(train_daten_x);
     test_daten_x = scaler.apply(test_daten_x);
-    /*
+    
     std::cout << "PCA" << std::endl;
     PCA pca;
     Matrix pca_train = pca.train_apply(train_daten_x);
     Matrix pca_test = pca.apply(test_daten_x);
     
     std::cout << "LogReg" << std::endl;
-    LogisticRegression<std::string> logReg;
-    logReg.train(train_daten_x, predict_y_train, 100000, 0.2, 100);
+    LogisticRegression<std::string> logReg(10000, 0.2, 100);
+    logReg.train(train_daten_x, predict_y_train);
     DataMatrix predict_logreg = logReg.predict(test_daten_x);
 
     std::cout << "Accuracy: " << Metrik::accuracy(predict_y_test, predict_logreg) << std::endl;
     //predict_y_test.print_Matrix();
     //predict_logreg.print_Matrix();
+    
     */
-
     SVM<std::string, RBFKernel> svm(1.0, 1e-3, 10, RBFKernel());
     svm.train(pca_x_train, predict_y);
     DataMatrix test_res_vec_svm = svm.predict(pca_x_test);
