@@ -9,6 +9,7 @@
 #include "Utility.h"
 #include <functional>
 #include <cmath>
+#include <span>
 
 
 
@@ -122,7 +123,7 @@ class SVMBinary : public Classifier<T>{
             return sum + b;
         }
 
-        double predict_single(const std::vector<double>& x_vec) const{
+        double predict_single(std::span<const double> x_vec) const{
             double sum = b;
             for(std::size_t i = 0; i < x.get_Size().rows; ++i) {
                 if(a[i][0] < 1e-8) continue;

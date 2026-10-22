@@ -4,6 +4,7 @@
 #include <cmath>
 #include "SVD.h"
 #include <random>
+#include <cassert>
 
 Matrix::Matrix(int rows, int cols) {
     size_.rows = rows;
@@ -56,11 +57,13 @@ Matrix::Matrix(int rows, int cols, double value) : scaled(false) {
 }
 
 std::span<double> Matrix::operator[](std::size_t row) {
-    return { matrix_as_vec.data() + row * size_.cols , size_.cols };
+    assert(row < size_.rows);
+    return std::span<double>(matrix_as_vec.data() + row * size_.cols, size_.cols);
 }
 
-std::span<const double> Matrix::operator[](std::size_t row) const{
-    return { matrix_as_vec.data() + row * size_.cols , size_.cols };
+std::span<const double> Matrix::operator[](std::size_t row) const {
+    assert(row < size_.rows);
+    return std::span<const double>(matrix_as_vec.data() + row * size_.cols, size_.cols);
 }
 
 Matrix Matrix::identity(std::size_t n) {
@@ -224,7 +227,8 @@ Matrix Matrix::get_Givens(std::size_t size, std::size_t i, double a, double b) {
 }
 
 Matrix Matrix::get_Diagonal(const std::vector<double>& diag) {
-    Matrix result = Matrix::identity(diag.size());
+    const std::size_t n = diag.size();
+    Matrix result(n,n);
     for(std::size_t i = 0; i < diag.size(); ++i) {
         result[i][i] = diag[i];
     }
@@ -234,7 +238,7 @@ std::vector<double> Matrix::get_Diagonal_Vector() const {
     std::vector<double> diag;
     std::size_t max = size_.rows > size_.cols ? size_.cols : size_.rows;
     for(std::size_t i = 0; i < max; ++i) {
-        diag.push_back(matrix_[i][i]);
+        diag.push_back(matrix_as_vec[i * size_.cols + i]);
     }
     return diag;
 }
@@ -244,7 +248,7 @@ Matrix Matrix::make_Square() const {
     Matrix result = Matrix::identity(size);
     for(std::size_t i = 0; i < size; ++i) {
         for(std::size_t j = 0; j < size; ++j) {
-            result[i][j] = matrix_[i][j];
+            result[i][j] = matrix_as_vec[i * size_.cols + j];
         } 
     }
     return result;
@@ -257,7 +261,7 @@ Matrix Matrix::einbetten_o_l(std::size_t size) const {
     }
     for(std::size_t i = 0; i < size_.rows; ++i) {
         for(std::size_t j = 0; j < size_.cols; ++j) {
-            result[i][j] = matrix_[i][j];
+            result[i][j] = matrix_as_vec[i * size_.cols + j];
         }
     }
     return result;
@@ -267,7 +271,7 @@ Matrix Matrix::resize(const Matrix_Size& size) const {
     Matrix result(size.rows, size.cols);
     for(std::size_t i = 0; i < size.rows; ++i) {
         for(std::size_t j = 0; j < size.cols; j++) {
-            result[i][j] = matrix_[i][j];
+            result[i][j] = matrix_as_vec[i * size_.cols + j];
         }
     }
     return result;
@@ -278,7 +282,7 @@ Matrix Matrix::get_Upper_Trig_From_Vec(const std::vector<std::vector<double>>& r
     for(std::size_t i = 0; i < rows.size(); ++i) {
         for(std::size_t j = 0; j < rows[i].size(); ++j) {
             std::size_t pos = result.size_.cols - rows[i].size() + j;
-            result.matrix_[i][pos] = rows[i][j];
+            result.matrix_as_vec[i * result.size_.cols + pos] = rows[i][j];
         }
     }
     return result;
@@ -305,7 +309,7 @@ Matrix Matrix::random(const Matrix_Size& size, double mean, double stddev) {
 Matrix& Matrix::operator-=(const Matrix& other) {
     for(int i = 0; i < size_.rows; i++)
         for(int j = 0; j < size_.cols; j++)
-            matrix_[i][j] -= other.matrix_[i][j];
+            matrix_as_vec[i * size_.cols + j] -= other.matrix_as_vec[i * other.size_.cols + j];
     return *this;
 }
 
@@ -319,13 +323,4 @@ bool Matrix::is_scaled() const {
 
 Matrix Matrix::get_Matrix_With_Value(const Matrix_Size& size, double val) {
     return Matrix(size.rows, size.cols, val);
-}
-
-void Matrix::initialize_Matrix_Vector() {
-    matrix_as_vec.resize(size_.rows * size_.cols);
-    for(std::size_t i = 0; i < size_.rows; ++i) {
-        for(std::size_t j = 0; j < size_.cols; ++j) {
-            matrix_as_vec[i * size_.cols + j] = matrix_[i][j];
-        }
-    }
 }

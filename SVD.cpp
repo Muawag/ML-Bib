@@ -17,7 +17,7 @@ Q_R_Matrizen SVD::q_r_step_spalte(Matrix& m){
 }
 
 Q_R_Matrizen SVD::q_r_step_zeile(Matrix& m) {
-    std::vector<double> a = m[0];
+    std::vector<double> a(m[0].begin(), m[0].end()); 
     Matrix y = Matrix::from_Vector(a,false) + std::copysign(1.0, a[0]) * norm2(a) * Matrix::get_Einheitsvektor(a.size(), 0, false);
     Matrix qy = Matrix::identity(a.size()) - 2 * ((y * y.transpose()) / Matrix::inner_produkt(y,y));
     return {qy, m * qy};
@@ -185,7 +185,8 @@ Q_R_Matrizen SVD::q_r_Decomposition(const Matrix& matrix) {
         if(m.get_Size().rows == 0 || m.get_Size().cols == 0) break;  
         auto[Q_n, m_neu] = SVD::q_r_step_spalte(m);
         q_Matricies.push_back(Q_n);
-        rows.push_back(m_neu[0]);
+        auto r = m_neu[0];
+        rows.emplace_back(r.begin(), r.end());
         m = m_neu.drop_Zeile(0).drop_Spalte(0);
     }
     Matrix Q = get_Matrix_From_Smaller(matrix.get_Size().rows, q_Matricies);

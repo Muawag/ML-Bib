@@ -20,8 +20,11 @@
             Matrix y_Batches(size, y_vals.get_Size().cols);
             for(std::size_t j = 0; j < size; ++j) {
                 int offset = i * size + j;
-                x_Batches[j] = x_vals[numbers[offset]];
-                y_Batches[j] = y_vals[numbers[offset]];
+                auto x_src = x_vals[numbers[offset]];
+                std::copy(x_src.begin(), x_src.end(), x_Batches[j].begin());
+
+                auto y_src = y_vals[numbers[offset]];
+                std::copy(y_src.begin(), y_src.end(), y_Batches[j].begin());
             }
             result.push_back({x_Batches, y_Batches});
         }

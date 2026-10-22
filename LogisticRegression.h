@@ -8,6 +8,7 @@
 #include <utility>
 #include <random>
 #include "Utility.h"
+#include <span>
 
 template <typename T>
 class LogisticRegression : public Classifier<T> {
@@ -50,7 +51,7 @@ class LogisticRegression : public Classifier<T> {
     
         private:
 
-        T predict_single(const std::vector<double>& eintrag) const {
+        T predict_single(std::span<const double> eintrag) const {
             std::size_t best = 0;
             double best_logit = std::inner_product(weights[0].begin(), weights[0].end(), eintrag.begin(), 0.0);
 
@@ -69,7 +70,7 @@ class LogisticRegression : public Classifier<T> {
             return std::exp(logits[klasse] - max_logit) / nenner;
         }
 
-        std::tuple<std::vector<double>, double, double> logits_and_nenner(const std::vector<double>& eintrag) const {
+        std::tuple<std::vector<double>, double, double> logits_and_nenner(std::span<const double> eintrag) const {
             std::vector<double> logits(possible_Classes_Count_);
             for (std::size_t i = 0; i < possible_Classes_Count_; ++i) {
                 logits[i] = std::inner_product(weights[i].begin(), weights[i].end(), eintrag.begin(), 0.0);
