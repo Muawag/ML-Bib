@@ -16,7 +16,7 @@ struct LinearKernel {
 
 struct PolyKernel {
     double degree, coef0;
-    PolyKernel(int degree = 3, double coef0 = 1.0) : degree(degree), coef0(coef0) {}
+    explicit PolyKernel(int degree = 3, double coef0 = 1.0) : degree(degree), coef0(coef0) {}
     double operator()(std::span<const double> a, std::span<const double> b) const {
         if(a.size() != b.size()) throw std::runtime_error("Vektoren unterschiedlich gross");
         double result = 0.0;
