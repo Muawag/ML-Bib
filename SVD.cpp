@@ -48,6 +48,7 @@ Bidiagonalisierte_Matrizen SVD::bidiagonalize(Matrix& m) {
 
     int max = size.cols;
         for(int i = 0; i < max-1; ++i) {
+            std::cout << i << std::endl;
             auto [p, m_neu] = q_r_step_spalte(m);
             p_matricies.push_back(p);
             as.push_back(m_neu[0][0]);
@@ -62,7 +63,6 @@ Bidiagonalisierte_Matrizen SVD::bidiagonalize(Matrix& m) {
                 bs.push_back(m_neu2[0][0]);
                 m = m_neu2.drop_Zeile(0);
             }
-            std::cout << "Bidig: " << i << std::endl;
         }
         if(!square_Matrix) {
             auto [p, m_neu] = q_r_step_spalte(m);
@@ -72,17 +72,10 @@ Bidiagonalisierte_Matrizen SVD::bidiagonalize(Matrix& m) {
         else{
             as.push_back(m[0][0]);
         }
-    /*else{
-        // Zweiter fall wird später behandelt
-    }*/
     Matrix J = generate_Bidiagonalisierte_Matrix(size, as, bs);
     Matrix P = get_Matrix_From_Smaller(size.rows, p_matricies);
     Matrix Q = get_Matrix_From_Smaller(size.cols, q_matricies);
-    J.print_Matrix();
-    // nur zum testen
 
-    Matrix Test = Q * J.transpose() * P.transpose();
-    Test.print_Matrix();
     return {P, J, Q};
 }
 
@@ -126,7 +119,6 @@ Givens_Matrizen SVD::givens_Iteration(Matrix& m) {
             Matrix G_L = Matrix::get_Givens(size.rows, i, m[i][i], m[i+1][i]);
             m = G_L * m;
             U = G_L * U;
-            std::cout << "Bulge: " << i << std::endl;
         }
         ++i;
         bool converged = true;
@@ -138,7 +130,6 @@ Givens_Matrizen SVD::givens_Iteration(Matrix& m) {
         }
         if(converged) break;
     }
-    std::cout << "converged" << std::endl;
     m = Matrix::get_Diagonal(m.get_Diagonal_Vector());
     return {V, m, U};
 }
@@ -146,22 +137,23 @@ Givens_Matrizen SVD::givens_Iteration(Matrix& m) {
 SVD_Matrizen SVD::svd(Matrix& m) {
     bool is_transposed = (m.get_Size(). rows < m.get_Size().cols);
     Matrix_Size size = m.get_Size();
-    std::cout << "Start Bidiagonalize" << std::endl;
     Bidiagonalisierte_Matrizen b = bidiagonalize(m);
-    std::cout << "Start Bulge chasing" << std::endl;
+    std::cout << "Bid Fertig" << std::endl;
     SVD_Matrizen matricies = get_SVD_From_Bidiagonal(b);
+    std::cout << "bulge fertig" << std::endl;
     if(is_transposed) {
-        matricies = {matricies.U.transpose(), matricies.Sigma.transpose(), matricies.V.transpose()};
+        matricies = {matricies.V, matricies.Sigma.transpose(), matricies.U};
     }
-    std::cout << "hier1" << std::endl;
     return clean_up_Svd(size,matricies);
 }
 
 SVD_Matrizen SVD::clean_up_Svd(const Matrix_Size& original_size, SVD_Matrizen& matricies) {
     make_SingWert_pos(matricies.U, matricies.Sigma);
     cleanup_order(matricies);
-    matricies.U = matricies.U.resize(original_size);
-    std::cout << "hier2" << std::endl;
+
+    int k = std::min(original_size.rows, original_size.cols);
+    matricies.U = matricies.U.resize({original_size.rows, k});
+    matricies.V = matricies.V.resize({original_size.cols, k});
     return matricies;
 }
 
