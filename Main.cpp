@@ -15,8 +15,13 @@
 
 int main() {
     
+<<<<<<< Updated upstream
     DataMatrix csv_matrix = CSVLoader::load_CSV("iris.csv");
     //csv_matrix.print_Matrix();
+=======
+   /* DataMatrix csv_matrix = CSVLoader::load_CSV("iris.csv");
+    csv_matrix.print_Matrix();
+>>>>>>> Stashed changes
     //csv_matrix.one_hot_encode("species", {"setosa"});
     //csv_matrix.print_Matrix();
     auto[train_daten, test_daten] = TrainTestSplit::split(csv_matrix, 0.8, "species");
@@ -68,10 +73,24 @@ int main() {
     //predict_y_test.print_Matrix();
     //predict_logreg.print_Matrix();
     
-    */
+    
     SVM<std::string, RBFKernel> svm(1.0, 1e-3, 10, RBFKernel());
     svm.train(pca_x_train, predict_y);
     DataMatrix test_res_vec_svm = svm.predict(pca_x_test);
 
-    std::cout << "Accuracy SVM: " << Metrik::accuracy(predict_y_test, test_res_vec_svm) << std::endl;
+    std::cout << "Accuracy SVM: " << Metrik::accuracy(predict_y_test, test_res_vec_svm) << std::endl;*/
+
+    std::vector<std::vector<double>> a1 = {
+    { 1,  2,  0, -1,  3,  4,  1, -2},
+    { 0,  3, -2,  5,  1,  0,  2,  1},
+    { 4, -1,  1,  2, -3,  2,  0,  6},
+    { 2,  0,  5, -2,  1, -1,  3,  0},
+    {-3,  1,  2,  0,  4,  3, -1,  2}
+    };
+    Matrix testMat(a1);
+
+    testMat.print_Matrix();
+    PCA pca;
+    Matrix pcaMatr = pca.train_apply(testMat);
+    pcaMatr.print_Matrix();
 }
