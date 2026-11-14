@@ -73,10 +73,10 @@ int main() {
     svm.train(pca_x_train, predict_y);
     DataMatrix test_res_vec_svm = svm.predict(pca_x_test);
 
-    std::cout << "Accuracy SVM: " << Metrik::accuracy(predict_y_test, test_res_vec_svm) << std::endl;*/
+    std::cout << "Accuracy SVM: " << Metrik::accuracy(predict_y_test, test_res_vec_svm) << std::endl;
 
 
-    /*
+    
     std::vector<std::vector<double>> a1 = {
     { 1,  2,  0, -1,  3,  4,  1, -2},
     { 0,  3, -2,  5,  1,  0,  2,  1},
@@ -90,6 +90,7 @@ int main() {
     testMat.print_Matrix();
     PCA pca;
     Matrix pcaMatr = pca.train_apply(testMat);
-    pcaMatr.print_Matrix();
+    //pcaMatr.print_Matrix();
     */
+    
 }

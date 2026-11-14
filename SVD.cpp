@@ -12,15 +12,19 @@ void cleanup_order(SVD_Matrizen& matricies);
 Q_R_Matrizen SVD::q_r_step_spalte(Matrix& m){
     std::vector<double> a = m.get_Column(0);
     Matrix x = Matrix::from_Vector(a, false) + std::copysign(1.0, a[0]) * norm2(a) * Matrix::get_Einheitsvektor(a.size(), 0, false);
-    Matrix qx = Matrix::identity(a.size()) - 2 * ((x * x.transpose()) / Matrix::inner_produkt(x,x));
-    return {qx, qx * m};
+    m = m - ((2*x) * ((x.transpose() * m) / Matrix::inner_produkt(x,x)));
+    //Matrix qx = Matrix::identity(a.size()) - 2 * ((x * x.transpose()) / Matrix::inner_produkt(x,x));
+    //return {qx, qx * m};
+    return {x,m};
 }
 
 Q_R_Matrizen SVD::q_r_step_zeile(Matrix& m) {
     std::vector<double> a(m[0].begin(), m[0].end()); 
     Matrix y = Matrix::from_Vector(a,false) + std::copysign(1.0, a[0]) * norm2(a) * Matrix::get_Einheitsvektor(a.size(), 0, false);
-    Matrix qy = Matrix::identity(a.size()) - 2 * ((y * y.transpose()) / Matrix::inner_produkt(y,y));
-    return {qy, m * qy};
+    m = m - ((m*y)/Matrix::inner_produkt(y,y)*y.transpose()*2);
+    //Matrix qy = Matrix::identity(a.size()) - 2 * ((y * y.transpose()) / Matrix::inner_produkt(y,y));
+    //return {qy, m * qy};
+    return {y,m};
 } 
 
 Matrix SVD::generate_Bidiagonalisierte_Matrix(const Matrix_Size& size, const std::vector<double>& as, const std::vector<double>& bs) {
@@ -50,6 +54,7 @@ Bidiagonalisierte_Matrizen SVD::bidiagonalize(Matrix& m) {
         for(int i = 0; i < max-1; ++i) {
             std::cout << i << std::endl;
             auto [p, m_neu] = q_r_step_spalte(m);
+            std::cout << "spalte" << std::endl;
             p_matricies.push_back(p);
             as.push_back(m_neu[0][0]);
             m = m_neu.drop_Spalte(0);
@@ -59,6 +64,7 @@ Bidiagonalisierte_Matrizen SVD::bidiagonalize(Matrix& m) {
             }
             else{
                 auto [q, m_neu2] = q_r_step_zeile(m);
+                std::cout << "zeile" << std::endl;
                 q_matricies.push_back(q);
                 bs.push_back(m_neu2[0][0]);
                 m = m_neu2.drop_Zeile(0);
@@ -73,9 +79,14 @@ Bidiagonalisierte_Matrizen SVD::bidiagonalize(Matrix& m) {
             as.push_back(m[0][0]);
         }
     Matrix J = generate_Bidiagonalisierte_Matrix(size, as, bs);
-    Matrix P = get_Matrix_From_Smaller(size.rows, p_matricies);
-    Matrix Q = get_Matrix_From_Smaller(size.cols, q_matricies);
-
+    //Matrix P = get_Matrix_From_Smaller(size.rows, p_matricies);
+    //Matrix Q = get_Matrix_From_Smaller(size.cols, q_matricies);
+    Matrix P = build_Householder_Matrix(size.rows, p_matricies, 0);
+    Matrix Q = build_Householder_Matrix(size.cols, q_matricies, 1);
+    //Matrix test = P * J * Q.transpose(); 
+    //test.print_Matrix();
+    //P.print_Matrix();
+    //Q.print_Matrix();
     return {P, J, Q};
 }
 
@@ -89,6 +100,19 @@ Matrix SVD::get_Matrix_From_Smaller(std::size_t size, const std::vector<Matrix>&
         result = result * matricies[i].einbetten_u_r(size);
     }
     return result;
+}
+
+Matrix SVD::build_Householder_Matrix(const std::size_t size, const std::vector<Matrix>& vectors, const std::size_t offset) {
+    Matrix Q = Matrix::identity(size);
+    for(std::size_t i = 0 ; i < vectors.size(); ++i) {
+        std::cout << "Householder: " << i << std::endl;
+        Matrix v = Matrix::get_Matrix_With_Value({(int)size, 1}, 0.0);
+        for(std::size_t j = 0; j < vectors[i].get_Size().rows; ++j)
+            v[j + i+ offset][0] = vectors[i][j][0];
+        
+        Q = Q - (Q * v) * v.transpose() * (2.0 / Matrix::inner_produkt(v,v));
+    }
+    return Q;
 }
 
 SVD_Matrizen SVD::get_SVD_From_Bidiagonal(Bidiagonalisierte_Matrizen& matricies) {
