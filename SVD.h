@@ -33,6 +33,7 @@ class SVD {
         static Givens_Matrizen givens_Iteration(Matrix& m);
         static SVD_Matrizen clean_up_Svd(const Matrix_Size& original_size, SVD_Matrizen& matricies);
         static Q_R_Matrizen q_r_Decomposition(const Matrix& m);
+        static Matrix build_Householder_Matrix(const std::size_t size, const std::vector<Matrix>& vectors, const std::size_t offset);
         private:
             //Für spätere Attribute evnt;
 };

@@ -14,14 +14,9 @@
 
 
 int main() {
-    
-<<<<<<< Updated upstream
+    /*
     DataMatrix csv_matrix = CSVLoader::load_CSV("iris.csv");
     //csv_matrix.print_Matrix();
-=======
-   /* DataMatrix csv_matrix = CSVLoader::load_CSV("iris.csv");
-    csv_matrix.print_Matrix();
->>>>>>> Stashed changes
     //csv_matrix.one_hot_encode("species", {"setosa"});
     //csv_matrix.print_Matrix();
     auto[train_daten, test_daten] = TrainTestSplit::split(csv_matrix, 0.8, "species");
@@ -46,7 +41,7 @@ int main() {
     DataMatrix test_res_vec_log = logReg.predict(pca_x_test);
 
     std::cout << "Accuracy LogReg: " << Metrik::accuracy(predict_y_test, test_res_vec_log) << std::endl;
-    /*
+    */
     DataMatrix cutouts = CSVLoader::load_CSV("cutouts.csv", false);
     auto[train_daten, test_daten] = TrainTestSplit::split(cutouts, 0.8, "3072");
     DataMatrix predict_y_train = train_daten.get_Spalte_as_Matrix_and_Drop("3072");
@@ -60,26 +55,35 @@ int main() {
     test_daten_x = scaler.apply(test_daten_x);
     
     std::cout << "PCA" << std::endl;
-    PCA pca;
-    Matrix pca_train = pca.train_apply(train_daten_x);
-    Matrix pca_test = pca.apply(test_daten_x);
+    //PCA pca;
+    //Matrix pca_train = pca.train_apply(train_daten_x);
+    //Matrix pca_test = pca.apply(test_daten_x);
     
-    std::cout << "LogReg" << std::endl;
+    std::cout << "SVM" << std::endl;
     LogisticRegression<std::string> logReg(10000, 0.2, 100);
     logReg.train(train_daten_x, predict_y_train);
     DataMatrix predict_logreg = logReg.predict(test_daten_x);
 
     std::cout << "Accuracy: " << Metrik::accuracy(predict_y_test, predict_logreg) << std::endl;
+    
+    std::cout << "SVM" << std::endl;
+    SVM<std::string, RBFKernel> svm(1.0, 1e-3, 10, RBFKernel());
+    svm.train(train_daten_x, predict_y_train);
+    DataMatrix test_res_vec_svm = svm.predict(test_daten_x);
+
+    std::cout << "Accuracy SVM: " << Metrik::accuracy(predict_y_test, test_res_vec_svm) << std::endl;
     //predict_y_test.print_Matrix();
     //predict_logreg.print_Matrix();
     
-    
+    /*
     SVM<std::string, RBFKernel> svm(1.0, 1e-3, 10, RBFKernel());
     svm.train(pca_x_train, predict_y);
     DataMatrix test_res_vec_svm = svm.predict(pca_x_test);
 
-    std::cout << "Accuracy SVM: " << Metrik::accuracy(predict_y_test, test_res_vec_svm) << std::endl;*/
+    std::cout << "Accuracy SVM: " << Metrik::accuracy(predict_y_test, test_res_vec_svm) << std::endl;
 
+
+    
     std::vector<std::vector<double>> a1 = {
     { 1,  2,  0, -1,  3,  4,  1, -2},
     { 0,  3, -2,  5,  1,  0,  2,  1},
@@ -88,9 +92,12 @@ int main() {
     {-3,  1,  2,  0,  4,  3, -1,  2}
     };
     Matrix testMat(a1);
+    testMat = testMat.transpose();
 
     testMat.print_Matrix();
     PCA pca;
     Matrix pcaMatr = pca.train_apply(testMat);
-    pcaMatr.print_Matrix();
+    //pcaMatr.print_Matrix();
+    */
+    
 }
