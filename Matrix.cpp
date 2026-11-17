@@ -9,6 +9,27 @@
 #include <xmmintrin.h>
 #include <pmmintrin.h>
 #include <emmintrin.h>
+#include <algorithm>
+#include <cassert>
+
+void AddDot4x4(int, const double*, const double*, double*, int);
+
+void PackMatrixA( int, const double*, int, double*);
+
+void PackMatrixB( int, const double*, int, double*);
+
+void InnerKernel(int, int, int, const double*, int, const double*, double*, int);
+
+void MY_MMult(int , int , int ,
+              const double *, int ,
+              const double *, int ,
+              double *, int );
+
+struct MatView {
+    double *p;
+    int ld;
+    double& operator()(int i, int j) const {return p[j * ld + i];}
+};
 
 Matrix::Matrix(int rows, int cols) {
     size_.rows = rows;
@@ -116,6 +137,7 @@ const std::vector<double> Matrix::get_Column(std::size_t index) const {
 }
 
 Matrix Matrix::operator*(const Matrix& m2) const {
+    if(m2.size_.cols % 4 != 0 ||size_.rows % 4 != 0) {
     if (size_.cols != m2.size_.rows) {
         throw std::runtime_error("Spaltenzahl der linken Matrix muss der Zeilenzahl der rechten entsprechen");
     }
@@ -133,6 +155,22 @@ Matrix Matrix::operator*(const Matrix& m2) const {
         }
     }
     return result;
+    }
+    if (size_.cols != m2.size_.rows) {
+        throw std::runtime_error("Spaltenzahl der linken Matrix muss der Zeilenzahl der rechten entsprechen");
+    }
+    const int m = static_cast<int>(size_.rows);      // Zeilen links
+    const int k = static_cast<int>(size_.cols);      // gemeinsame Dimension
+    const int n = static_cast<int>(m2.size_.cols);   // Spalten rechts
+
+    Matrix C(Matrix_Size{m, n});                     // mit 0.0 initialisiert
+
+    // Kernel rechnet column-major: C^T = B^T * A^T
+    MY_MMult(n, m, k,
+             m2.matrix_as_vec.data(), n,             // "A" des Kernels = B, ld = Spaltenzahl von B
+             matrix_as_vec.data(), k,                // "B" des Kernels = A, ld = Spaltenzahl von A
+             C.matrix_as_vec.data(), n);             // "C" des Kernels, ld = Spaltenzahl von C
+    return C;
 }
 
 void Matrix::print_Matrix() const {
@@ -334,7 +372,7 @@ typedef union {
     double d[2];
 } v2df_t;
 
-void Matrix::AddDot4x4(int k, double *a, int lda, double *b, int ldb, double *c, int ldc) {
+void AddDot4x4(int k, const double *a, const double *b, double *c, int ldc) {
 
     int p;
     v2df_t
@@ -376,7 +414,25 @@ void Matrix::AddDot4x4(int k, double *a, int lda, double *b, int ldb, double *c,
             c_23_c_33_vreg.v += a_2p_a_3p_vreg.v * b_p3_vreg.v;
 
         }
+        c[0] += c_00_c_10_vreg.d[0];  
+        c[1 * ldc] += c_01_c_11_vreg.d[0];  
+        c[2 * ldc] += c_02_c_12_vreg.d[0];  
+        c[3 * ldc] += c_03_c_13_vreg.d[0]; 
 
+        c[1] += c_00_c_10_vreg.d[1];  
+        c[1 * ldc + 1] += c_01_c_11_vreg.d[1];  
+        c[2 * ldc + 1] += c_02_c_12_vreg.d[1];  
+        c[3 * ldc + 1] += c_03_c_13_vreg.d[1]; 
+
+        c[2] += c_20_c_30_vreg.d[0];  
+        c[1 * ldc + 2] += c_21_c_31_vreg.d[0];  
+        c[2 * ldc + 2] += c_22_c_32_vreg.d[0];  
+        c[3 * ldc + 2] += c_23_c_33_vreg.d[0]; 
+
+        c[3] += c_20_c_30_vreg.d[1];
+        c[1 * ldc + 3] += c_21_c_31_vreg.d[1];  
+        c[2 * ldc + 3] += c_22_c_32_vreg.d[1];
+        c[3 * ldc + 3] += c_23_c_33_vreg.d[1]; 
 
 
 }
@@ -389,3 +445,80 @@ const double* Matrix::data() const {
     return matrix_as_vec.data();
 }
 
+void PackMatrixA(int k, const double *a, int lda, double *a_to) {
+    int j;
+
+    for(j = 0; j < k; j++) {
+        const double *a_ij_pntr = &a[j * lda];
+
+        *a_to++ = a_ij_pntr[0];
+        *a_to++ = a_ij_pntr[1];
+        *a_to++ = a_ij_pntr[2];
+        *a_to++ = a_ij_pntr[3];
+    }
+}
+
+int Matrix::ld() const {
+    return size_.rows;
+}
+
+double& Matrix::operator()(int i, int j) {
+    return matrix_as_vec[ j * size_.rows + i];
+}
+
+double Matrix::operator()(int i, int j) const {
+    return matrix_as_vec[ j * size_.rows + i];
+}
+
+void PackMatrixB(int k, const double *b, int ldb, double *b_to) {
+	int i;
+	const double
+		*b_i0_pntr = &b[0 * ldb], *b_i1_pntr = &b[1 * ldb],
+		*b_i2_pntr = &b[2 * ldb], *b_i3_pntr = &b[3 * ldb];
+
+		for( i = 0; i < k; i++) {
+			*b_to++ = *b_i0_pntr++;
+			*b_to++ = *b_i1_pntr++;
+			*b_to++ = *b_i2_pntr++;
+			*b_to++ = *b_i3_pntr++;
+		}
+}
+
+void InnerKernel(int m, int n, int k,
+                 const double *a, int lda,
+                 const double *packedB,
+                 double *c, int ldc)
+{
+    std::vector<double> packedA(m * k);
+
+    for (int j = 0; j < n; j += 4) {
+        for (int i = 0; i < m; i += 4) {
+            if (j == 0)
+                PackMatrixA(k, &a[i], lda, &packedA[i * k]);
+            AddDot4x4(k, &packedA[i * k], &packedB[j * k],
+                      &c[j * ldc + i], ldc);
+        }
+    }
+}
+constexpr int mc = 256;
+constexpr int kc = 128;
+
+void MY_MMult(int m, int n, int k,
+              const double *a, int lda,
+              const double *b, int ldb,
+              double *c, int ldc)
+{
+    std::cout << "Neue Mult" << std::endl;
+    for (int p = 0; p < k; p += kc) {
+    int pb = std::min(k - p, kc);
+    std::vector<double> packedB(pb * n);
+    for (int j = 0; j < n; j += 4)
+        PackMatrixB(pb, &b[j * ldb + p], ldb, &packedB[j * pb]);
+
+    for (int i = 0; i < m; i += mc) {
+        int ib = std::min(m - i, mc);
+        InnerKernel(ib, n, pb, &a[p * lda + i], lda,
+                    packedB.data(), &c[i], ldc);
+    }
+}
+}

@@ -72,15 +72,14 @@ class Matrix {
         bool is_scaled() const;
         double* data();
         const double* data() const;
+        int ld() const;
+        double& operator()(int i, int j);
+        double operator()(int i, int j) const;
 
     private:
         void initialize_Matrix_Vector();
-        void AddDot4x4(int, double *, int, double *, int, double *, int);
-        void PackMatrixA(int, double *, int, double *);
-        void PackMatrixB(int, double *, int, double *);
-        void InnerKernel(int, int, int, double *, int, double *, int, double *, int, int);
-        void MY_Mult(int, int, int, double *, int, double *, int, double *, int);
-    
+        
+
     private:
         std::vector<std::vector<double>> matrix_;
         std::vector<double> matrix_as_vec;
