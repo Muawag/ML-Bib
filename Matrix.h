@@ -70,9 +70,16 @@ class Matrix {
         static Matrix random(const Matrix_Size& size, double lower, double upper);
         void set_scaled(bool scaled);
         bool is_scaled() const;
+        double* data();
+        const double* data() const;
 
     private:
         void initialize_Matrix_Vector();
+        void AddDot4x4(int, double *, int, double *, int, double *, int);
+        void PackMatrixA(int, double *, int, double *);
+        void PackMatrixB(int, double *, int, double *);
+        void InnerKernel(int, int, int, double *, int, double *, int, double *, int, int);
+        void MY_Mult(int, int, int, double *, int, double *, int, double *, int);
     
     private:
         std::vector<std::vector<double>> matrix_;

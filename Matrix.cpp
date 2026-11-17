@@ -5,6 +5,10 @@
 #include "SVD.h"
 #include <random>
 #include <cassert>
+#include <mmintrin.h>
+#include <xmmintrin.h>
+#include <pmmintrin.h>
+#include <emmintrin.h>
 
 Matrix::Matrix(int rows, int cols) {
     size_.rows = rows;
@@ -324,3 +328,64 @@ bool Matrix::is_scaled() const {
 Matrix Matrix::get_Matrix_With_Value(const Matrix_Size& size, double val) {
     return Matrix(size.rows, size.cols, val);
 }
+
+typedef union {
+    __m128d v;
+    double d[2];
+} v2df_t;
+
+void Matrix::AddDot4x4(int k, double *a, int lda, double *b, int ldb, double *c, int ldc) {
+
+    int p;
+    v2df_t
+        c_00_c_10_vreg,  c_01_c_11_vreg,  c_02_c_12_vreg,  c_03_c_13_vreg,
+        c_20_c_30_vreg,  c_21_c_31_vreg,  c_22_c_32_vreg,  c_23_c_33_vreg,
+        a_0p_a_1p_vreg,
+        a_2p_a_3p_vreg,
+        b_p0_vreg,  b_p1_vreg,  b_p2_vreg,  b_p3_vreg;
+
+        c_00_c_10_vreg.v = _mm_setzero_pd();
+        c_01_c_11_vreg.v = _mm_setzero_pd();
+        c_02_c_12_vreg.v = _mm_setzero_pd();
+        c_03_c_13_vreg.v = _mm_setzero_pd();
+        c_20_c_30_vreg.v = _mm_setzero_pd();
+        c_21_c_31_vreg.v = _mm_setzero_pd();
+        c_22_c_32_vreg.v = _mm_setzero_pd();
+        c_23_c_33_vreg.v = _mm_setzero_pd();
+
+        for( p = 0; p < k; p++) {
+            a_0p_a_1p_vreg.v = _mm_load_pd( (double *) a);
+            a_2p_a_3p_vreg.v = _mm_load_pd( (double *) ( a+2 ));
+            a += 4;             
+
+            b_p0_vreg.v = _mm_loaddup_pd( (double *) b);
+            b_p1_vreg.v = _mm_loaddup_pd( (double *) (b+1));
+            b_p2_vreg.v = _mm_loaddup_pd( (double *) (b+2));
+            b_p3_vreg.v = _mm_loaddup_pd( (double *) (b+3));
+            b += 4;
+
+            c_00_c_10_vreg.v += a_0p_a_1p_vreg.v * b_p0_vreg.v;
+            c_01_c_11_vreg.v += a_0p_a_1p_vreg.v * b_p1_vreg.v;
+            c_02_c_12_vreg.v += a_0p_a_1p_vreg.v * b_p2_vreg.v;
+            c_03_c_13_vreg.v += a_0p_a_1p_vreg.v * b_p3_vreg.v;
+
+
+            c_20_c_30_vreg.v += a_2p_a_3p_vreg.v * b_p0_vreg.v;
+            c_21_c_31_vreg.v += a_2p_a_3p_vreg.v * b_p1_vreg.v;
+            c_22_c_32_vreg.v += a_2p_a_3p_vreg.v * b_p2_vreg.v;
+            c_23_c_33_vreg.v += a_2p_a_3p_vreg.v * b_p3_vreg.v;
+
+        }
+
+
+
+}
+
+double* Matrix::data() {
+    return matrix_as_vec.data();
+}
+
+const double* Matrix::data() const {
+    return matrix_as_vec.data();
+}
+
