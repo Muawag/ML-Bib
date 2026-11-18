@@ -14,6 +14,8 @@
 
 void AddDot4x4(int, const double*, const double*, double*, int);
 
+void AddDot8x4(int, const double*, const double*, double*, int);
+
 void PackMatrixA( int, const double*, int, double*);
 
 void PackMatrixB( int, const double*, int, double*);
@@ -24,6 +26,8 @@ void MY_MMult(int , int , int ,
               const double *, int ,
               const double *, int ,
               double *, int );
+
+void Fast_MY_MMult(int, int, int, const double *, int, const double *, int, double *, int);
 
 struct MatView {
     double *p;
@@ -137,7 +141,7 @@ const std::vector<double> Matrix::get_Column(std::size_t index) const {
 }
 
 Matrix Matrix::operator*(const Matrix& m2) const {
-    if(m2.size_.cols % 4 != 0 ||size_.rows % 4 != 0) {
+    /*if(m2.size_.cols % 4 != 0 ||size_.rows % 4 != 0) {
     if (size_.cols != m2.size_.rows) {
         throw std::runtime_error("Spaltenzahl der linken Matrix muss der Zeilenzahl der rechten entsprechen");
     }
@@ -155,7 +159,7 @@ Matrix Matrix::operator*(const Matrix& m2) const {
         }
     }
     return result;
-    }
+    }*/
     if (size_.cols != m2.size_.rows) {
         throw std::runtime_error("Spaltenzahl der linken Matrix muss der Zeilenzahl der rechten entsprechen");
     }
@@ -446,15 +450,9 @@ const double* Matrix::data() const {
 }
 
 void PackMatrixA(int k, const double *a, int lda, double *a_to) {
-    int j;
-
-    for(j = 0; j < k; j++) {
-        const double *a_ij_pntr = &a[j * lda];
-
-        *a_to++ = a_ij_pntr[0];
-        *a_to++ = a_ij_pntr[1];
-        *a_to++ = a_ij_pntr[2];
-        *a_to++ = a_ij_pntr[3];
+    for (int j = 0; j < k; j++) {
+        const double *col = &a[j * lda];
+        for (int r = 0; r < 8; r++) *a_to++ = col[r];
     }
 }
 
@@ -492,10 +490,10 @@ void InnerKernel(int m, int n, int k,
     std::vector<double> packedA(m * k);
 
     for (int j = 0; j < n; j += 4) {
-        for (int i = 0; i < m; i += 4) {
+        for (int i = 0; i < m; i += 8) {
             if (j == 0)
                 PackMatrixA(k, &a[i], lda, &packedA[i * k]);
-            AddDot4x4(k, &packedA[i * k], &packedB[j * k],
+            AddDot8x4(k, &packedA[i * k], &packedB[j * k],
                       &c[j * ldc + i], ldc);
         }
     }
@@ -503,12 +501,11 @@ void InnerKernel(int m, int n, int k,
 constexpr int mc = 256;
 constexpr int kc = 128;
 
-void MY_MMult(int m, int n, int k,
+void Fast_MY_MMult(int m, int n, int k,
               const double *a, int lda,
               const double *b, int ldb,
               double *c, int ldc)
 {
-    std::cout << "Neue Mult" << std::endl;
     for (int p = 0; p < k; p += kc) {
     int pb = std::min(k - p, kc);
     std::vector<double> packedB(pb * n);
@@ -521,4 +518,106 @@ void MY_MMult(int m, int n, int k,
                     packedB.data(), &c[i], ldc);
     }
 }
+}
+
+void MY_MMult(int m, int n, int k, const double *a, int lda, const double *b, int ldb, double *c, int ldc) {
+    int m8 = m - m%8;
+    int n4 = n - n%4;
+    
+    if(m8 > 0 && n4 > 0) {
+        Fast_MY_MMult(m8, n4, k, a, lda, b, ldb, c, ldc);
+    }
+
+        for (int j = n4; j < n; ++j) {
+            for (int p = 0; p < k; ++p) {
+                for (int i = 0; i < m; ++i) {
+                    c[j*ldc + i] += a[p*lda + i] * b[j*ldb + p];
+                }
+            }
+        }
+
+    for (int j = 0; j < n4; ++j) {
+        for (int p = 0; p < k; ++p) {
+            for (int i = m8; i < m; ++i) {
+                c[j*ldc + i] += a[p*lda + i] * b[j*ldb + p];
+            }
+        }
+    }
+}
+
+Matrix Matrix::get_Matrix_with_random(const Matrix_Size& size, std::mt19937& rnd, std::uniform_real_distribution<double>& dist) {
+    Matrix result(size);
+    for (std::size_t i = 0; i < size.rows * size.cols; ++i) {
+        result.matrix_as_vec[i] = dist(rnd);
+    }
+    return result;
+}
+
+Matrix Matrix::old_mult(const Matrix& a, const Matrix& b) {
+        if (a.size_.cols != b.size_.rows) {
+        throw std::runtime_error("Spaltenzahl der linken Matrix muss der Zeilenzahl der rechten entsprechen");
+    }
+    auto t0 = std::chrono::steady_clock::now();
+    const std::size_t n = a.size_.rows;
+    const std::size_t m = a.size_.cols;      
+    const std::size_t p = b.size_.cols;
+
+    Matrix result(n, p);
+    for (std::size_t i = 0; i < n; ++i) {
+        for (std::size_t k = 0; k < m; ++k) {
+            const double a_num = a.matrix_as_vec[i * m + k];
+            for (std::size_t j = 0; j < p; ++j) {
+                result.matrix_as_vec[i * p + j] += a_num * b.matrix_as_vec[k * p + j];
+            }
+        }
+    }
+    auto t1 = std::chrono::steady_clock::now();
+    std::chrono::duration<double> dt = t1 - t0;   // Sekunden als double
+    return result;
+}
+
+double Matrix::max_matrix_diff(const Matrix& a, const Matrix& b) {
+    double maxdiff = 0.0;
+    for (std::size_t i = 0; i < a.size_.rows * a.size_.cols; ++i)
+        maxdiff = std::max(maxdiff, std::abs(a.matrix_as_vec[i] - b.matrix_as_vec[i]));
+    return maxdiff;
+}
+
+void AddDot8x4(int k, const double *a, const double *b, double *c, int ldc) {
+    __m256d c00 = _mm256_setzero_pd(), c01 = c00, c02 = c00, c03 = c00; // Zeilen 0-3
+    __m256d c10 = c00, c11 = c00, c12 = c00, c13 = c00;                 // Zeilen 4-7
+
+    for (int p = 0; p < k; ++p) {
+        __m256d a0 = _mm256_loadu_pd(a);
+        __m256d a1 = _mm256_loadu_pd(a + 4);
+
+        __m256d b0 = _mm256_broadcast_sd(b + 0);
+        c00 = _mm256_fmadd_pd(a0, b0, c00);
+        c10 = _mm256_fmadd_pd(a1, b0, c10);
+
+        __m256d b1 = _mm256_broadcast_sd(b + 1);
+        c01 = _mm256_fmadd_pd(a0, b1, c01);
+        c11 = _mm256_fmadd_pd(a1, b1, c11);
+
+        __m256d b2 = _mm256_broadcast_sd(b + 2);
+        c02 = _mm256_fmadd_pd(a0, b2, c02);
+        c12 = _mm256_fmadd_pd(a1, b2, c12);
+
+        __m256d b3 = _mm256_broadcast_sd(b + 3);
+        c03 = _mm256_fmadd_pd(a0, b3, c03);
+        c13 = _mm256_fmadd_pd(a1, b3, c13);
+
+        a += 8;
+        b += 4;
+    }
+
+    double *c0 = c, *c1 = c + ldc, *c2 = c + 2*ldc, *c3 = c + 3*ldc;
+    _mm256_storeu_pd(c0,     _mm256_add_pd(_mm256_loadu_pd(c0),     c00));
+    _mm256_storeu_pd(c0 + 4, _mm256_add_pd(_mm256_loadu_pd(c0 + 4), c10));
+    _mm256_storeu_pd(c1,     _mm256_add_pd(_mm256_loadu_pd(c1),     c01));
+    _mm256_storeu_pd(c1 + 4, _mm256_add_pd(_mm256_loadu_pd(c1 + 4), c11));
+    _mm256_storeu_pd(c2,     _mm256_add_pd(_mm256_loadu_pd(c2),     c02));
+    _mm256_storeu_pd(c2 + 4, _mm256_add_pd(_mm256_loadu_pd(c2 + 4), c12));
+    _mm256_storeu_pd(c3,     _mm256_add_pd(_mm256_loadu_pd(c3),     c03));
+    _mm256_storeu_pd(c3 + 4, _mm256_add_pd(_mm256_loadu_pd(c3 + 4), c13));
 }

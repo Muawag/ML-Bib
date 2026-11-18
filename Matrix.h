@@ -6,6 +6,9 @@
 #include <vector>
 #include "DataMatrix.h"
 #include <span>
+#include <random>
+#include <chrono>
+#include <immintrin.h>
 
 
 class Matrix {
@@ -75,6 +78,9 @@ class Matrix {
         int ld() const;
         double& operator()(int i, int j);
         double operator()(int i, int j) const;
+        static Matrix get_Matrix_with_random(const Matrix_Size& size, std::mt19937& rnd, std::uniform_real_distribution<double>& dist);
+        static Matrix old_mult(const Matrix& a, const Matrix& b);
+        static double max_matrix_diff(const Matrix& a, const Matrix& b);
 
     private:
         void initialize_Matrix_Vector();
