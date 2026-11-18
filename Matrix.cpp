@@ -5,7 +5,6 @@
 #include "SVD.h"
 #include <random>
 #include <cassert>
-#include <mmintrin.h>
 #include <xmmintrin.h>
 #include <pmmintrin.h>
 #include <emmintrin.h>
@@ -39,13 +38,12 @@ Matrix::Matrix(int rows, int cols) {
     size_.rows = rows;
     size_.cols = cols;
     scaled = false;
-    //matrix_.resize(rows, std::vector<double>(cols, 0.0));
     matrix_as_vec.resize(rows * cols , 0.0);
 }
+Matrix::Matrix() : size_({0, 0}), matrix_as_vec(0) {}
 
 Matrix::Matrix(const Matrix_Size& size) : size_(size) {
     scaled = false;
-    //matrix_.resize(size.rows, std::vector<double>(size.cols, 0.0));
     matrix_as_vec.resize(size.rows * size.cols, 0.0);
 }
 Matrix::Matrix(const std::vector<std::vector<double>>& vecs) : scaled(false) {
@@ -141,39 +139,19 @@ const std::vector<double> Matrix::get_Column(std::size_t index) const {
 }
 
 Matrix Matrix::operator*(const Matrix& m2) const {
-    /*if(m2.size_.cols % 4 != 0 ||size_.rows % 4 != 0) {
     if (size_.cols != m2.size_.rows) {
         throw std::runtime_error("Spaltenzahl der linken Matrix muss der Zeilenzahl der rechten entsprechen");
     }
-    const std::size_t n = size_.rows;
-    const std::size_t m = size_.cols;      
-    const std::size_t p = m2.size_.cols;
+    const int m = static_cast<int>(size_.rows);      
+    const int k = static_cast<int>(size_.cols);      
+    const int n = static_cast<int>(m2.size_.cols);   
 
-    Matrix result(n, p);
-    for (std::size_t i = 0; i < n; ++i) {
-        for (std::size_t k = 0; k < m; ++k) {
-            const double a = matrix_as_vec[i * m + k];
-            for (std::size_t j = 0; j < p; ++j) {
-                result.matrix_as_vec[i * p + j] += a * m2.matrix_as_vec[k * p + j];
-            }
-        }
-    }
-    return result;
-    }*/
-    if (size_.cols != m2.size_.rows) {
-        throw std::runtime_error("Spaltenzahl der linken Matrix muss der Zeilenzahl der rechten entsprechen");
-    }
-    const int m = static_cast<int>(size_.rows);      // Zeilen links
-    const int k = static_cast<int>(size_.cols);      // gemeinsame Dimension
-    const int n = static_cast<int>(m2.size_.cols);   // Spalten rechts
+    Matrix C(Matrix_Size{m, n});                     
 
-    Matrix C(Matrix_Size{m, n});                     // mit 0.0 initialisiert
-
-    // Kernel rechnet column-major: C^T = B^T * A^T
     MY_MMult(n, m, k,
-             m2.matrix_as_vec.data(), n,             // "A" des Kernels = B, ld = Spaltenzahl von B
-             matrix_as_vec.data(), k,                // "B" des Kernels = A, ld = Spaltenzahl von A
-             C.matrix_as_vec.data(), n);             // "C" des Kernels, ld = Spaltenzahl von C
+             m2.matrix_as_vec.data(), n,             
+             matrix_as_vec.data(), k,                
+             C.matrix_as_vec.data(), n);             
     return C;
 }
 
@@ -557,7 +535,6 @@ Matrix Matrix::old_mult(const Matrix& a, const Matrix& b) {
         if (a.size_.cols != b.size_.rows) {
         throw std::runtime_error("Spaltenzahl der linken Matrix muss der Zeilenzahl der rechten entsprechen");
     }
-    auto t0 = std::chrono::steady_clock::now();
     const std::size_t n = a.size_.rows;
     const std::size_t m = a.size_.cols;      
     const std::size_t p = b.size_.cols;
@@ -571,8 +548,6 @@ Matrix Matrix::old_mult(const Matrix& a, const Matrix& b) {
             }
         }
     }
-    auto t1 = std::chrono::steady_clock::now();
-    std::chrono::duration<double> dt = t1 - t0;   // Sekunden als double
     return result;
 }
 
@@ -584,8 +559,8 @@ double Matrix::max_matrix_diff(const Matrix& a, const Matrix& b) {
 }
 
 void AddDot8x4(int k, const double *a, const double *b, double *c, int ldc) {
-    __m256d c00 = _mm256_setzero_pd(), c01 = c00, c02 = c00, c03 = c00; // Zeilen 0-3
-    __m256d c10 = c00, c11 = c00, c12 = c00, c13 = c00;                 // Zeilen 4-7
+    __m256d c00 = _mm256_setzero_pd(), c01 = c00, c02 = c00, c03 = c00; 
+    __m256d c10 = c00, c11 = c00, c12 = c00, c13 = c00;                 
 
     for (int p = 0; p < k; ++p) {
         __m256d a0 = _mm256_loadu_pd(a);
