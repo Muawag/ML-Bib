@@ -145,13 +145,16 @@ Matrix Matrix::operator*(const Matrix& m2) const {
     const int m = static_cast<int>(size_.rows);      
     const int k = static_cast<int>(size_.cols);      
     const int n = static_cast<int>(m2.size_.cols);   
-
+    auto t0 = std::chrono::steady_clock::now();
     Matrix C(Matrix_Size{m, n});                     
 
     MY_MMult(n, m, k,
              m2.matrix_as_vec.data(), n,             
              matrix_as_vec.data(), k,                
-             C.matrix_as_vec.data(), n);             
+             C.matrix_as_vec.data(), n);      
+    auto t1 = std::chrono::steady_clock::now();
+    std::chrono::duration<double> dauer = t1 - t0;           
+    std::cout << dauer.count() << " s\n";       
     return C;
 }
 
@@ -487,9 +490,12 @@ void Fast_MY_MMult(int m, int n, int k,
     for (int p = 0; p < k; p += kc) {
     int pb = std::min(k - p, kc);
     std::vector<double> packedB(pb * n);
+    
+    //#pragma omp parallel for schedule(static)
     for (int j = 0; j < n; j += 4)
         PackMatrixB(pb, &b[j * ldb + p], ldb, &packedB[j * pb]);
 
+    //#pragma omp parallel for schedule(dynamic)
     for (int i = 0; i < m; i += mc) {
         int ib = std::min(m - i, mc);
         InnerKernel(ib, n, pb, &a[p * lda + i], lda,

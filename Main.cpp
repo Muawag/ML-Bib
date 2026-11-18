@@ -41,7 +41,7 @@ int main() {
     DataMatrix test_res_vec_log = logReg.predict(pca_x_test);
 
     std::cout << "Accuracy LogReg: " << Metrik::accuracy(predict_y_test, test_res_vec_log) << std::endl;
-    */
+    /*
     DataMatrix cutouts = CSVLoader::load_CSV("cutouts.csv", false);
     auto[train_daten, test_daten] = TrainTestSplit::split(cutouts, 0.8, "3072");
     DataMatrix predict_y_train = train_daten.get_Spalte_as_Matrix_and_Drop("3072");
@@ -99,18 +99,18 @@ int main() {
     Matrix pcaMatr = pca.train_apply(testMat);
     //pcaMatr.print_Matrix();
     */
-/*std::mt19937 rng(42);
+std::mt19937 rng(42);
 std::uniform_real_distribution<double> dist(-1.0, 1.0);
 
-Matrix A = Matrix::get_Matrix_with_random(Matrix_Size{3000, 3000}, rng, dist);
-Matrix B = Matrix::get_Matrix_with_random(Matrix_Size{3000, 3000}, rng, dist);
+Matrix A = Matrix::get_Matrix_with_random(Matrix_Size{1000, 128000}, rng, dist);
+Matrix B = Matrix::get_Matrix_with_random(Matrix_Size{128000, 1000}, rng, dist);
 
 Matrix matA(A);
 Matrix matB(B);
 
 Matrix matC = matA * matB;
-Matrix c_ref = Matrix::old_mult(matA, matB);
+//Matrix c_ref = Matrix::old_mult(matA, matB);
 
-//std::cout << "Diff: " << Matrix::max_matrix_diff(matC, c_ref) << std::endl;*/
+//std::cout << "Diff: " << Matrix::max_matrix_diff(matC, c_ref) << std::endl;
 
 }
