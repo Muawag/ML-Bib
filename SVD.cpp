@@ -231,5 +231,17 @@ Q_R_Matrizen SVD::q_r_Decomposition(const Matrix& matrix) {
 
 }
 
+SVD_Matrizen SVD::svd_gramm(Matrix& m) {
+    Matrix covariance = get_small_Covariance(m); 
+}
+
+Matrix get_small_Covariance(const Matrix& m) { // Hier wird gerade noch das doppelte berechnet, wenn man also will könnte man das optimieren damit nur noch eine hälfte berechnet wird
+    if(m.get_Size().cols < m.get_Size().rows) {
+        return  m.transpose() * m;
+    }
+    return m * m.transpose();
+}
+
+
 
  
