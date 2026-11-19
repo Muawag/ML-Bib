@@ -38,3 +38,40 @@
         }
         return y_result;
     }
+
+    Q_R_Matrizen Utility::tridiagonalize_symmetric_Matrix(Matrix& matrix) {
+        if(matrix.get_Size().rows < 3) std::cout << "Matrix zu klein um zu tridiagonalisieren" << std::endl;
+        // isngesamt n-2 iterationen
+
+        std::size_t size = matrix.get_Size().rows;
+        for(std::size_t i = 0; i < size - 2; ++i) {
+            double* x = (matrix.data() + i * size + (i + 1));
+            int len = size - i - 1;
+            double alpha; // Hier morgen weiter 
+        }
+
+    }
+
+    void householder(double* x, int len, double* alpha, double* v, double* tau) {
+        double tail = 0.0;
+        for (int i = 1; i < len; ++i) tail += x[i] * x[i];
+
+        if (tail == 0.0) {            // nichts zu nullen
+            *tau = 0.0;
+            *alpha = x[0];
+            v[0] = 1.0;
+            for (int i = 1; i < len; ++i) v[i] = 0.0;
+            return;
+        }
+
+        double x0 = x[0];
+        *alpha = - std::copysign(1.0, x0) * std::sqrt(x0 * x0 + tail);
+        *tau = (*alpha - x0) / *alpha;
+        double scale = 1.0 / (x0 - *alpha);
+
+        v[0] = 1.0;
+        for (int i = 1; i < len; ++i) v[i] = x[i] * scale;
+    }
+
+
+
