@@ -110,7 +110,48 @@
     }
 
     EigenResult implicit_QR_shift(std::vector<double>& diag, std::vector<double>& sub_diag) {
-        
+        std::size_t size = diag.size()-1;
+        double epsilon = std::numeric_limits<double>::epsilon();
+        while(size > 0) {// abbruchbedingung fehlt noch
+            //erster schritt
+            //eigenwert bestimmen
+            double a = diag[size-1];
+            double d = diag[size];
+            double b = sub_diag[size-1];          // Index prüfen, siehe oben
+
+            double mu = d;
+            if (std::abs(b) > epsilon) {
+                double delta = (a - d) / 2;
+                double sgn = (delta >= 0.0) ? 1.0 : -1.0;
+                mu = d - sgn * b * b / (std::abs(delta) + std::hypot(delta, b));
+            }
+            else size--;
+
+            // Iteration über die Matrix mit bulge
+            // bulge muss noch berechnet werden
+            double bulge; // Bulge
+            for(std::size_t i = 0; i < size - 1; ++i) {
+                double a = sub_diag[i];
+                double r = std::sqrt(a * a + bulge * bulge);
+                // falls r ungleich 0
+                double c = a / r;
+                double s = bulge / r;
+                // Werte updaten, bulge muss nicht geupdated werden weil auf 0
+                sub_diag[i] = r;
+                if(i + 2 != size ) {
+                    double zwi1, zwi2;
+
+                    zwi1 = c * diag[i+1] + s * sub_diag[i+1];
+                    zwi2 = - s * diag[i+1] + c * sub_diag[i+1];
+                    diag[i+1] = zwi1;
+
+                    diag[i+2] = - s * sub_diag[i+1] + c * diag[i+2];
+
+                    bulge = s * sub_diag[i+2];
+                    sub_diag[i+2] = c * sub_diag[i+2];
+                }
+            }
+        }
     }
 
 
