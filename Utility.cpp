@@ -1,5 +1,9 @@
 #include "Utility.h"
 
+
+
+    double householder(double* , int , double* );
+
     std::vector<std::pair<Matrix, Matrix>> Utility::get_Batches(const Matrix& x_vals, const Matrix& y_vals, int size) {
         if(size > x_vals.get_Size().rows) {
             std::cout << "Batchsize grösser als Trainigsdaten" << std::endl;
@@ -39,34 +43,74 @@
         return y_result;
     }
 
-    Q_R_Matrizen Utility::tridiagonalize_symmetric_Matrix(Matrix& matrix) {
-        if(matrix.get_Size().rows < 3) std::cout << "Matrix zu klein um zu tridiagonalisieren" << std::endl;
+    TridiagonalResult Utility::tridiagonalize_symmetric_Matrix(Matrix& matrix) {
+        if(matrix.get_Size().rows < 3) throw std::invalid_argument("Matrix zu klein um zu tridiagonalisieren");
         // isngesamt n-2 iterationen
-
+        
         std::size_t size = matrix.get_Size().rows;
-        std::vector<double> taus(size-2);
-        for(std::size_t i = 0; i < size - 2; ++i) {
-            double* x = (matrix.data() + i * size + (i + 1));
-            int len = size - i - 1;
-            taus[i] = householder(x, len);
+        std::vector<double> sub_diagonal(size-2);
+        std::vector<double> taus(size > 2 ? size - 2 : 0);
+        std::vector<double> v(size), p(size), w(size);
+        double* A = matrix.data();
+        double a_i;
+        for (std::size_t i = 0; i + 2 < size; ++i) {
+            double* x = A + i * size + (i + 1);
+            std::size_t len = size - i - 1;
+            taus[i] = householder(x, static_cast<int>(len), &a_i);
+            sub_diagonal[i] = a_i;
+            double tau = taus[i];
+            if (tau == 0.0) continue;
+
+            v[0] = 1.0;
+            for (std::size_t k = 1; k < len; ++k) v[k] = x[k];
+
+            double* B = A + (i + 1) * size + (i + 1);
+
+            for (std::size_t r = 0; r < len; ++r) p[r] = 0.0;
+            for (std::size_t r = 0; r < len; ++r) {
+                const double* row = B + r * size;
+                p[r] += row[r] * v[r];
+                for (std::size_t c = r + 1; c < len; ++c) {
+                    p[r] += row[c] * v[c];
+                    p[c] += row[c] * v[r];
+                }
+            }
+            double pv = 0.0;
+            for (std::size_t r = 0; r < len; ++r) { p[r] *= tau; pv += p[r] * v[r]; }
+
+            for (std::size_t r = 0; r < len; ++r) w[r] = p[r] - 0.5 * tau * pv * v[r];
+
+            for (std::size_t r = 0; r < len; ++r) {
+                double* row = B + r * size;
+                for (std::size_t c = r; c < len; ++c)
+                    row[c] -= v[r] * w[c] + w[r] * v[c];
+            }
         }
+        std::vector<double> diag = matrix.get_Diagonal_Vector();
+        return {sub_diagonal, diag, taus, std::move(matrix)};
 
     }
 
-    double householder(double* x, int len) {
+    double householder(double* x, int len, double* a) {
         double tail = 0.0;
         for (int i = 1; i < len; ++i) tail += x[i] * x[i];
 
+        *a = x[0];
         if (tail == 0.0) return 0.0;              // H = I, x bleibt wie es ist
 
         double x0 = x[0];
         double alpha = -std::copysign(1.0, x0) * std::sqrt(x0 * x0 + tail);
+        *a = alpha;
         double tau = (alpha - x0) / alpha;
         double scale = 1.0 / (x0 - alpha);
 
         for (int i = 1; i < len; ++i) x[i] *= scale;   // v[1:] direkt in der Matrix
         x[0] = alpha;                                  // Nebendiagonale e[i]
         return tau;
+    }
+
+    EigenResult implicit_QR_shift(std::vector<double>& diag, std::vector<double>& sub_diag) {
+        
     }
 
 

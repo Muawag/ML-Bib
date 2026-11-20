@@ -8,6 +8,7 @@
 double norm2(const std::vector<double>& vec);
 void make_SingWert_pos(Matrix& U, Matrix& diag);
 void cleanup_order(SVD_Matrizen& matricies);
+Matrix get_small_Covariance(const Matrix& m);
 
 Q_R_Matrizen SVD::q_r_step_spalte(Matrix& m){
     std::vector<double> a = m.get_Column(0);
@@ -233,6 +234,7 @@ Q_R_Matrizen SVD::q_r_Decomposition(const Matrix& matrix) {
 
 SVD_Matrizen SVD::svd_gramm(Matrix& m) {
     Matrix covariance = get_small_Covariance(m); 
+    return {Matrix::identity(1), covariance, Matrix::identity(1)};
 }
 
 Matrix get_small_Covariance(const Matrix& m) { // Hier wird gerade noch das doppelte berechnet, wenn man also will könnte man das optimieren damit nur noch eine hälfte berechnet wird
