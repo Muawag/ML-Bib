@@ -44,34 +44,31 @@
         // isngesamt n-2 iterationen
 
         std::size_t size = matrix.get_Size().rows;
+        std::vector<double> taus(size-2);
         for(std::size_t i = 0; i < size - 2; ++i) {
             double* x = (matrix.data() + i * size + (i + 1));
             int len = size - i - 1;
-            double alpha; // Hier morgen weiter 
+            taus[i] = householder(x, len);
         }
 
     }
 
-    void householder(double* x, int len, double* alpha, double* v, double* tau) {
+    double householder(double* x, int len) {
         double tail = 0.0;
         for (int i = 1; i < len; ++i) tail += x[i] * x[i];
 
-        if (tail == 0.0) {            // nichts zu nullen
-            *tau = 0.0;
-            *alpha = x[0];
-            v[0] = 1.0;
-            for (int i = 1; i < len; ++i) v[i] = 0.0;
-            return;
-        }
+        if (tail == 0.0) return 0.0;              // H = I, x bleibt wie es ist
 
         double x0 = x[0];
-        *alpha = - std::copysign(1.0, x0) * std::sqrt(x0 * x0 + tail);
-        *tau = (*alpha - x0) / *alpha;
-        double scale = 1.0 / (x0 - *alpha);
+        double alpha = -std::copysign(1.0, x0) * std::sqrt(x0 * x0 + tail);
+        double tau = (alpha - x0) / alpha;
+        double scale = 1.0 / (x0 - alpha);
 
-        v[0] = 1.0;
-        for (int i = 1; i < len; ++i) v[i] = x[i] * scale;
+        for (int i = 1; i < len; ++i) x[i] *= scale;   // v[1:] direkt in der Matrix
+        x[0] = alpha;                                  // Nebendiagonale e[i]
+        return tau;
     }
+
 
 
 
