@@ -113,13 +113,18 @@ Matrix matC = matA * matB;
 
 //std::cout << "Diff: " << Matrix::max_matrix_diff(matC, c_ref) << std::endl;
 
+*/
 
+//DataMatrix daten = CSVLoader::load_CSV("cutouts.csv", false);
+//daten.remove_Spalte("3072");
+std::mt19937 rng(42);
+std::uniform_real_distribution<double> dist(-1.0, 1.0);
 
-DataMatrix daten = CSVLoader::load_CSV("cutouts.csv", false);
-daten.remove_Spalte("3072");
-Matrix x(daten);
-auto[a,b,c] = SVD::svd_gramm(x);
-std::cout << "Fertig, Dim: " << b.get_Size() << std::endl; */
+Matrix m = Matrix::get_Matrix_with_random(Matrix_Size{1000, 400000}, rng, dist);
+StandartScaler s;
+m = s.train_apply(m);
+auto[a,b,c] = SVD::svd_gramm(m);
+//std::cout << "Fertig, Dim: " << b.get_Size() << std::endl; 
 
 std::vector<std::vector<double>> A = {
     {4, 1, 2, 3},
@@ -127,7 +132,13 @@ std::vector<std::vector<double>> A = {
     {2, 0, 5, 2},
     {3, 1, 2, 6}
 };
-Matrix a(A);
-auto[sub,diag,tau, matrix] = Utility::tridiagonalize_symmetric_Matrix(a);
-matrix.print_Matrix();
+
+//DataMatrix d = CSVLoader::load_CSV("iris.csv");
+//d.remove_Spalte("species");
+//Matrix x(d);
+//SVD::svd_gramm(x);
+//Matrix a(A);
+//auto[sub,diag,tau, matrix] = Utility::tridiagonalize_symmetric_Matrix(a);
+//SVD::svd_gramm(a);
+//matrix.print_Matrix();
 }

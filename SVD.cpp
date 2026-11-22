@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <cmath>
+#include "Utility.h"
 
 double norm2(const std::vector<double>& vec);
 void make_SingWert_pos(Matrix& U, Matrix& diag);
@@ -234,6 +235,12 @@ Q_R_Matrizen SVD::q_r_Decomposition(const Matrix& matrix) {
 
 SVD_Matrizen SVD::svd_gramm(Matrix& m) {
     Matrix covariance = get_small_Covariance(m); 
+    auto[subdiagonal, diagonal, taus, reflectors] = Utility::tridiagonalize_symmetric_Matrix(covariance);
+    auto[eigenvalues, matrix] = Utility::implicit_QR_shift(diagonal, subdiagonal);
+    for(double d : eigenvalues) {
+        std::cout << d << "\t";
+    }
+    std::cout << std::endl;
     return {Matrix::identity(1), covariance, Matrix::identity(1)};
 }
 

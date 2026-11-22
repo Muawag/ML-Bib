@@ -54,4 +54,6 @@ class Utility {
 
 
         static Matrix prepare_SVM_Matrix(const Matrix& labels, const int index); 
+        
+        static EigenResult implicit_QR_shift(std::vector<double>& diag, std::vector<double>& sub_diag);
 };
