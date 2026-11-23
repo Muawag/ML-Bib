@@ -115,16 +115,23 @@ Matrix matC = matA * matB;
 
 */
 
-//DataMatrix daten = CSVLoader::load_CSV("cutouts.csv", false);
-//daten.remove_Spalte("3072");
-std::mt19937 rng(42);
+DataMatrix daten = CSVLoader::load_CSV("cutouts.csv", false);
+daten.remove_Spalte("3072");
+Matrix matrix(daten);
+StandartScaler s;
+s.train_apply(matrix);
+auto[a,b,c] = SVD::svd_gramm(matrix, 0.95);
+std::cout << b.get_Size() << std::endl;
+
+/*std::mt19937 rng(42);
 std::uniform_real_distribution<double> dist(-1.0, 1.0);
 
 Matrix m = Matrix::get_Matrix_with_random(Matrix_Size{1000, 400000}, rng, dist);
 StandartScaler s;
 m = s.train_apply(m);
-auto[a,b,c] = SVD::svd_gramm(m);
-//std::cout << "Fertig, Dim: " << b.get_Size() << std::endl; 
+auto[a,b,c] = SVD::svd_gramm(m, 0.95);
+std::cout << b.get_Size() << std::endl;
+//std::cout << "Fertig, Dim: " << b.get_Size() << std::endl; */
 
 std::vector<std::vector<double>> A = {
     {4, 1, 2, 3},

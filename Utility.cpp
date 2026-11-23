@@ -112,6 +112,7 @@
 
     EigenResult Utility::implicit_QR_shift(std::vector<double>& diag, std::vector<double>& sub_diag) {
         std::size_t size = diag.size()-1;
+        const std::size_t n = diag.size();
         double epsilon = std::numeric_limits<double>::epsilon();
         Matrix result = Matrix::identity(size+1);
         double* result_daten = result.data();
@@ -167,12 +168,15 @@
             diag[l+1] = ss * d0 - 2 * cs * e0 + cc * d1;
 
             sub_diag[l] = (cc - ss) * e0 + cs * (d1 - d0);
-            for(std::size_t i = 0; i <= size; ++i) {
-                double x = result_daten[i];
-                double y = result_daten[(size-1) + i];
 
-                result_daten[i] = c * x + s * y;
-                result_daten[(size-1) + i] = -s * x + c * y; 
+            double* zk = result_daten + l * n;
+            double* zk1 = result_daten + (l + 1) * n;
+
+            for(std::size_t j = 0; j < n; ++j) {
+                double x = zk[j], y = zk1[j];
+
+                zk[j] = c * x + s * y;
+                zk1[j] = -s * x + c * y; 
             }
 
             if (size >= l + 2) {
@@ -219,18 +223,32 @@
                     sub_diag[i+2] = e2;
                 }
                 // Matrix update
-                for(std::size_t j = 0; j <= size; ++j) {
-                double x = result_daten[(size-1) * i + j];
-                double y = result_daten[(size-1) * (i+1) + j];
 
-                result_daten[(size-1) * i + j] = c * x + s * y;
-                result_daten[(size-1) * (i+1) + j] = -s * x + c * y;   
+                double* zk = result_daten + (i + 1) * n;
+                double* zk1 = result_daten + (i + 2) * n;
+                for(std::size_t j = 0; j < n ; ++j) {
+                    double x = zk[j], y = zk1[j];
+
+                    zk[j] = c * x + s * y;
+                    zk1[j] = -s * x + c * y;
                 }
             }
         }
 
-        std::sort(diag.begin(), diag.end(), std::greater<double>());
-        return EigenResult{diag, result};
+        std::vector<std::size_t> idx(n);
+        std::iota(idx.begin(), idx.end(), 0);
+        std::sort(idx.begin(), idx.end(), [&] (std::size_t p, std::size_t q) {return diag[p] > diag[q];});
+
+        std::vector<double> d_sorted(n);
+        Matrix sorted = Matrix::identity(n);
+        double* s_data = sorted.data();
+        for(std::size_t k = 0; k < n; ++k) {
+            d_sorted[k] = std::sqrt(std::max(0.0, diag[idx[k]])); // Vielleicht später mal ändern wenn der code nicht nur für die covarianz matrix funktionieren soll
+            std::copy(result_daten + idx[k] * n, result_daten + (idx[k] + 1) * n, s_data + k * n);
+        }
+
+
+        return EigenResult{d_sorted, sorted};
     }
 
 

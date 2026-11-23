@@ -10,7 +10,7 @@
 #include <stdexcept>
 #include "Q_R_Matrizen.h"
 #include "TridiagResult.h"
-
+#include <numeric>
 
 
 class Utility {

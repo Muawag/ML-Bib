@@ -34,7 +34,7 @@ class SVD {
         static SVD_Matrizen clean_up_Svd(const Matrix_Size& original_size, SVD_Matrizen& matricies);
         static Q_R_Matrizen q_r_Decomposition(const Matrix& m);
         static Matrix build_Householder_Matrix(const std::size_t size, const std::vector<Matrix>& vectors, const std::size_t offset);
-        static SVD_Matrizen svd_gramm(Matrix& m);
+        static SVD_Matrizen svd_gramm(Matrix& m, const double threshould);
         private:
             //Für spätere Attribute evnt;
 };
