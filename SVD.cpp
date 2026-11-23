@@ -234,10 +234,12 @@ Q_R_Matrizen SVD::q_r_Decomposition(const Matrix& matrix) {
 
 }
 
-SVD_Matrizen SVD::svd_gramm(Matrix& m, const double threshold) {
+SVD_Matrizen SVD::svd_gramm(const Matrix& m, const double threshold, bool* flat) {
+    *flat = (m.get_Size().rows < m.get_Size().cols);
     Matrix covariance = get_small_Covariance(m); 
     auto[subdiagonal, diagonal, taus, reflectors] = Utility::tridiagonalize_symmetric_Matrix(covariance);
     auto[singvalues, matrix] = Utility::implicit_QR_shift(diagonal, subdiagonal);
+
 
     double* A = reflectors.data();
     double* sorted_data = matrix.data();

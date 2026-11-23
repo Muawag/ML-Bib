@@ -11,6 +11,8 @@
 #include "Metrik.h"
 #include "SVM.h"
 #include "Kernel.h"
+#include "PCAFast.h"
+#include <chrono>
 
 
 int main() {
@@ -41,7 +43,7 @@ int main() {
     DataMatrix test_res_vec_log = logReg.predict(pca_x_test);
 
     std::cout << "Accuracy LogReg: " << Metrik::accuracy(predict_y_test, test_res_vec_log) << std::endl;
-    /*
+    
     DataMatrix cutouts = CSVLoader::load_CSV("cutouts.csv", false);
     auto[train_daten, test_daten] = TrainTestSplit::split(cutouts, 0.8, "3072");
     DataMatrix predict_y_train = train_daten.get_Spalte_as_Matrix_and_Drop("3072");
@@ -55,11 +57,11 @@ int main() {
     test_daten_x = scaler.apply(test_daten_x);
     
     std::cout << "PCA" << std::endl;
-    PCA pca;
+    PCAFast pca;
     Matrix pca_train = pca.train_apply(train_daten_x);
     Matrix pca_test = pca.apply(test_daten_x);
     
-    std::cout << "SVM" << std::endl;
+    std::cout << "LogReg" << std::endl;
     LogisticRegression<std::string> logReg(2000, 0.2, 100);
     logReg.train(train_daten_x, predict_y_train);
     DataMatrix predict_logreg = logReg.predict(test_daten_x);
@@ -71,7 +73,7 @@ int main() {
     svm.train(train_daten_x, predict_y_train);
     DataMatrix test_res_vec_svm = svm.predict(test_daten_x);
 
-    std::cout << "Accuracy SVM: " << Metrik::accuracy(predict_y_test, test_res_vec_svm) << std::endl;
+    std::cout << "Accuracy SVM: " << Metrik::accuracy(predict_y_test, test_res_vec_svm) << std::endl;*/
     //predict_y_test.print_Matrix();
     //predict_logreg.print_Matrix();
     
@@ -99,29 +101,42 @@ int main() {
     Matrix pcaMatr = pca.train_apply(testMat);
     //pcaMatr.print_Matrix();
     */
-/*std::mt19937 rng(42);
+std::mt19937 rng(42);
 std::uniform_real_distribution<double> dist(-1.0, 1.0);
 
-Matrix A = Matrix::get_Matrix_with_random(Matrix_Size{1000, 128000}, rng, dist);
-Matrix B = Matrix::get_Matrix_with_random(Matrix_Size{128000, 1000}, rng, dist);
+Matrix A = Matrix::get_Matrix_with_random(Matrix_Size{800, 400000}, rng, dist);
+//Matrix B = Matrix::get_Matrix_with_random(Matrix_Size{128000, 1000}, rng, dist);
 
-Matrix matA(A);
-Matrix matB(B);
+StandartScaler s;
+Matrix scaled = s.train_apply(A);
 
-Matrix matC = matA * matB;
+auto t0 = std::chrono::steady_clock::now();
+PCAFast pca;
+Matrix pcaMat = pca.train_apply(scaled);
+auto t1 = std::chrono::steady_clock::now();
+
+double sec = std::chrono::duration<double>(t1 - t0).count();
+std::cout << "Fertig: " << sec << " Sekunden" << std::endl;
 //Matrix c_ref = Matrix::old_mult(matA, matB);
 
 //std::cout << "Diff: " << Matrix::max_matrix_diff(matC, c_ref) << std::endl;
 
-*/
 
-DataMatrix daten = CSVLoader::load_CSV("cutouts.csv", false);
-daten.remove_Spalte("3072");
-Matrix matrix(daten);
-StandartScaler s;
-s.train_apply(matrix);
-auto[a,b,c] = SVD::svd_gramm(matrix, 0.95);
-std::cout << b.get_Size() << std::endl;
+
+//DataMatrix daten = CSVLoader::load_CSV("cutouts.csv", false);
+//daten.remove_Spalte("3072");
+//DataMatrix daten = CSVLoader::load_CSV("iris.csv");
+//daten.remove_Spalte("species");
+//Matrix matrix(daten);
+//StandartScaler s;
+//std::cout << matrix.get_Size() << std::endl;
+//Matrix scaled = s.train_apply(matrix);
+//PCAFast pca;
+//Matrix pcaMat = pca.train_apply(scaled);
+//PCA pca;
+//Matrix pcaMat = pca.train_apply(scaled);
+//pcaMat.print_Matrix();
+//std::cout << pcaMat.get_Size() << std::endl;
 
 /*std::mt19937 rng(42);
 std::uniform_real_distribution<double> dist(-1.0, 1.0);
@@ -133,12 +148,12 @@ auto[a,b,c] = SVD::svd_gramm(m, 0.95);
 std::cout << b.get_Size() << std::endl;
 //std::cout << "Fertig, Dim: " << b.get_Size() << std::endl; */
 
-std::vector<std::vector<double>> A = {
+/*std::vector<std::vector<double>> A = {
     {4, 1, 2, 3},
     {1, 3, 0, 1},
     {2, 0, 5, 2},
     {3, 1, 2, 6}
-};
+};*/
 
 //DataMatrix d = CSVLoader::load_CSV("iris.csv");
 //d.remove_Spalte("species");

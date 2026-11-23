@@ -145,16 +145,12 @@ Matrix Matrix::operator*(const Matrix& m2) const {
     const int m = static_cast<int>(size_.rows);      
     const int k = static_cast<int>(size_.cols);      
     const int n = static_cast<int>(m2.size_.cols);   
-    auto t0 = std::chrono::steady_clock::now();
     Matrix C(Matrix_Size{m, n});                     
 
     MY_MMult(n, m, k,
              m2.matrix_as_vec.data(), n,             
              matrix_as_vec.data(), k,                
-             C.matrix_as_vec.data(), n);      
-    auto t1 = std::chrono::steady_clock::now();
-    std::chrono::duration<double> dauer = t1 - t0;           
-    std::cout << dauer.count() << " s\n";       
+             C.matrix_as_vec.data(), n);           
     return C;
 }
 
