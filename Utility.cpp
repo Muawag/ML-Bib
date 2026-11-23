@@ -113,6 +113,8 @@
     EigenResult Utility::implicit_QR_shift(std::vector<double>& diag, std::vector<double>& sub_diag) {
         std::size_t size = diag.size()-1;
         double epsilon = std::numeric_limits<double>::epsilon();
+        Matrix result = Matrix::identity(size+1);
+        double* result_daten = result.data();
         std::size_t max_iter = 0;
         while(size > 0) {
             if(max_iter > 30 * diag.size() * 2)  throw std::runtime_error("QR-Iteration konvergiert nicht");
@@ -165,6 +167,13 @@
             diag[l+1] = ss * d0 - 2 * cs * e0 + cc * d1;
 
             sub_diag[l] = (cc - ss) * e0 + cs * (d1 - d0);
+            for(std::size_t i = 0; i <= size; ++i) {
+                double x = result_daten[i];
+                double y = result_daten[(size-1) + i];
+
+                result_daten[i] = c * x + s * y;
+                result_daten[(size-1) + i] = -s * x + c * y; 
+            }
 
             if (size >= l + 2) {
                 double e1 = c * sub_diag[l+1];
@@ -209,11 +218,19 @@
 
                     sub_diag[i+2] = e2;
                 }
+                // Matrix update
+                for(std::size_t j = 0; j <= size; ++j) {
+                double x = result_daten[(size-1) * i + j];
+                double y = result_daten[(size-1) * (i+1) + j];
+
+                result_daten[(size-1) * i + j] = c * x + s * y;
+                result_daten[(size-1) * (i+1) + j] = -s * x + c * y;   
+                }
             }
         }
 
         std::sort(diag.begin(), diag.end(), std::greater<double>());
-        return EigenResult{diag, Matrix::identity(1)};
+        return EigenResult{diag, result};
     }
 
 
