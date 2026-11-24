@@ -234,7 +234,7 @@ Q_R_Matrizen SVD::q_r_Decomposition(const Matrix& matrix) {
 
 }
 
-std::tuple<const Matrix&, const std::vector<double>&> SVD::svd_gramm_for_pca(const Matrix& m, const double threshold, bool* flat) {
+std::tuple<const Matrix, const std::vector<double>> SVD::svd_gramm_for_pca(const Matrix& m, const double threshold, bool* flat) {
     *flat = (m.get_Size().rows < m.get_Size().cols);
     Matrix covariance = get_small_Covariance(m); 
     auto[subdiagonal, diagonal, taus, reflectors] = Utility::tridiagonalize_symmetric_Matrix(covariance);
@@ -266,6 +266,7 @@ std::tuple<const Matrix&, const std::vector<double>&> SVD::svd_gramm_for_pca(con
     std::copy(sorted_data, sorted_data + k * n, U_t.data());
     std::vector<double> sing_k(k);
     std::copy(singvalues.begin(), singvalues.begin() + k, sing_k.begin());
+    std::cout << "Gramm Size. " << U_t.get_Size() << std::endl;
     return {U_t.transpose(), sing_k};
 }
 

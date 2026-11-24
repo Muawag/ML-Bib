@@ -10,6 +10,7 @@
 #include "TrainTestSplit.h"
 #include "Metrik.h"
 #include "SVM.h"
+#include "ActivationFunktion.h"
 #include "Kernel.h"
 #include "PCAFast.h"
 #include <chrono>
@@ -43,7 +44,7 @@ int main() {
     DataMatrix test_res_vec_log = logReg.predict(pca_x_test);
 
     std::cout << "Accuracy LogReg: " << Metrik::accuracy(predict_y_test, test_res_vec_log) << std::endl;
-    
+    */
     DataMatrix cutouts = CSVLoader::load_CSV("cutouts.csv", false);
     auto[train_daten, test_daten] = TrainTestSplit::split(cutouts, 0.8, "3072");
     DataMatrix predict_y_train = train_daten.get_Spalte_as_Matrix_and_Drop("3072");
@@ -73,7 +74,7 @@ int main() {
     svm.train(train_daten_x, predict_y_train);
     DataMatrix test_res_vec_svm = svm.predict(test_daten_x);
 
-    std::cout << "Accuracy SVM: " << Metrik::accuracy(predict_y_test, test_res_vec_svm) << std::endl;*/
+    std::cout << "Accuracy SVM: " << Metrik::accuracy(predict_y_test, test_res_vec_svm) << std::endl;
     //predict_y_test.print_Matrix();
     //predict_logreg.print_Matrix();
     
@@ -100,7 +101,7 @@ int main() {
     PCA pca;
     Matrix pcaMatr = pca.train_apply(testMat);
     //pcaMatr.print_Matrix();
-    */
+    
 std::mt19937 rng(42);
 std::uniform_real_distribution<double> dist(-1.0, 1.0);
 
@@ -163,4 +164,23 @@ std::cout << b.get_Size() << std::endl;
 //auto[sub,diag,tau, matrix] = Utility::tridiagonalize_symmetric_Matrix(a);
 //SVD::svd_gramm(a);
 //matrix.print_Matrix();
+
+
+//std::cout << ActivationFunktion::Linear(10) << std::endl;
+
+//std::cout << ActivationFunktion::Gelu(10) << std::endl;
+
+//std::cout << ActivationFunktion::Sigmoid(10) << std::endl;
+
+/*DataMatrix d = CSVLoader::load_CSV("cutouts.csv", false);
+d.remove_Spalte("3072");
+
+Matrix m(d);
+
+StandartScaler s;
+Matrix scaled = s.train_apply(m);
+
+PCAFast pca;
+Matrix pcaMat = pca.train_apply(scaled);*/
+
 }

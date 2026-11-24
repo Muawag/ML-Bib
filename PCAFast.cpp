@@ -3,13 +3,13 @@
 void PCAFast::train(const Matrix& m, double threshold) {
 
     auto [U, Sigma] = SVD::svd_gramm_for_pca(m, threshold, &flat);
-    std::cout << "SVD" << std::endl;
-    k = U.get_Size().cols;
 
+    k = U.get_Size().cols;
+    
     if (!flat) {
         V_k = U;                                
     } else {
-        V_k = m.transpose() * U;               
+        V_k = m.transpose() * U;   // Hier stimmt was nicht   
         double* d = V_k.data();
         const std::size_t rows = V_k.get_Size().rows;
         const std::size_t cols = V_k.get_Size().cols;
