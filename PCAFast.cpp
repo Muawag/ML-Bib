@@ -2,7 +2,7 @@
 
 void PCAFast::train(const Matrix& m, double threshold) {
 
-    auto [U, Sigma, V] = SVD::svd_gramm(m, threshold, &flat);
+    auto [U, Sigma] = SVD::svd_gramm_for_pca(m, threshold, &flat);
     std::cout << "SVD" << std::endl;
     k = U.get_Size().cols;
 
@@ -10,13 +10,12 @@ void PCAFast::train(const Matrix& m, double threshold) {
         V_k = U;                                
     } else {
         V_k = m.transpose() * U;               
-        std::vector<double> sv = Sigma.get_Diagonal_Vector();   
         double* d = V_k.data();
         const std::size_t rows = V_k.get_Size().rows;
         const std::size_t cols = V_k.get_Size().cols;
         for (std::size_t i = 0; i < rows; ++i)
             for (std::size_t j = 0; j < cols; ++j)
-                d[i * cols + j] /= sv[j];       
+                d[i * cols + j] /= Sigma[j];       
     }
     trained = true;
 }

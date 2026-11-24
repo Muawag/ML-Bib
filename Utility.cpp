@@ -97,7 +97,7 @@
         for (int i = 1; i < len; ++i) tail += x[i] * x[i];
 
         *a = x[0];
-        if (tail == 0.0) return 0.0;              // H = I, x bleibt wie es ist
+        if (tail == 0.0) return 0.0;              
 
         double x0 = x[0];
         double alpha = -std::copysign(1.0, x0) * std::sqrt(x0 * x0 + tail);
@@ -105,8 +105,8 @@
         double tau = (alpha - x0) / alpha;
         double scale = 1.0 / (x0 - alpha);
 
-        for (int i = 1; i < len; ++i) x[i] *= scale;   // v[1:] direkt in der Matrix
-        x[0] = alpha;                                  // Nebendiagonale e[i]
+        for (int i = 1; i < len; ++i) x[i] *= scale;   
+        x[0] = alpha;                                
         return tau;
     }
 
