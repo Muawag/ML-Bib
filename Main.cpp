@@ -44,7 +44,7 @@ int main() {
     DataMatrix test_res_vec_log = logReg.predict(pca_x_test);
 
     std::cout << "Accuracy LogReg: " << Metrik::accuracy(predict_y_test, test_res_vec_log) << std::endl;
-    */
+    
     DataMatrix cutouts = CSVLoader::load_CSV("cutouts.csv", false);
     auto[train_daten, test_daten] = TrainTestSplit::split(cutouts, 0.8, "3072");
     DataMatrix predict_y_train = train_daten.get_Spalte_as_Matrix_and_Drop("3072");
@@ -183,4 +183,8 @@ Matrix scaled = s.train_apply(m);
 PCAFast pca;
 Matrix pcaMat = pca.train_apply(scaled);*/
 
+
+DataMatrix d = CSVLoader::load_CSV("Auswertung.csv", true, ';');
+DataMatrix spec = d.get_Spalte_as_Matrix_and_Drop("Species");
+spec.print_Matrix();
 }

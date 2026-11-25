@@ -4,7 +4,7 @@
 #include "Spalte.h"
 #include <memory>
 
-std::vector<std::vector<std::string>> get_CSV_as_Matrix(const std::string path);
+std::vector<std::vector<std::string>> get_CSV_as_Matrix(const std::string path, char sep);
 bool is_Numeric(const std::string& s);
 Column_Type check_Column_Type(const std::vector<std::string>& col);
 bool is_Int(const std::string& s);
@@ -12,8 +12,8 @@ bool is_Bool(const std::string& s);
 bool to_Bool(const std::string& s); 
 std::unique_ptr<Spalte> make_Column(const std::vector<std::string>& col);
 
-DataMatrix CSVLoader::load_CSV(const std::string path, bool header_vorhanden) {
-    std::vector<std::vector<std::string>> matrix = get_CSV_as_Matrix(path);
+DataMatrix CSVLoader::load_CSV(const std::string path, bool header_vorhanden, char sep) {
+    std::vector<std::vector<std::string>> matrix = get_CSV_as_Matrix(path, sep);
     std::vector<std::string> header;
     if(header_vorhanden) {
         for (size_t i = 0; i < matrix.size(); ++i) {
@@ -35,8 +35,8 @@ DataMatrix CSVLoader::load_CSV(const std::string path, bool header_vorhanden) {
     return d;
 
 }
-DataMatrix CSVLoader::load_CSV(const std::string path, const std::vector<std::string>& header) {
-    std::vector<std::vector<std::string>> matrix = get_CSV_as_Matrix(path);
+DataMatrix CSVLoader::load_CSV(const std::string path, const std::vector<std::string>& header, char sep) {
+    std::vector<std::vector<std::string>> matrix = get_CSV_as_Matrix(path, sep); 
     std::vector<std::unique_ptr<Spalte>> d_matrix;
     for(auto& vec : matrix) {
         d_matrix.push_back(make_Column(vec));
@@ -46,7 +46,7 @@ DataMatrix CSVLoader::load_CSV(const std::string path, const std::vector<std::st
 
 }
 
-std::vector<std::vector<std::string>> get_CSV_as_Matrix(const std::string path) {
+std::vector<std::vector<std::string>> get_CSV_as_Matrix(const std::string path, char sep) {
     std::fstream file(path);
     if(!file.is_open()) {
         throw std::runtime_error("Pfad konnte nicht gefunden werden");
@@ -60,7 +60,7 @@ std::vector<std::vector<std::string>> get_CSV_as_Matrix(const std::string path) 
         std::string cell;
         int col = 0;
 
-        while (std::getline(ss, cell, ',')) {
+        while (std::getline(ss, cell, sep)) {
             if (col >= matrix.size()) {
                 matrix.resize(col + 1);
             }
