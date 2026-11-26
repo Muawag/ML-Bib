@@ -1,5 +1,9 @@
 #include "Utility.h"
 
+
+
+    double householder(double* , int , double* );
+
     std::vector<std::pair<Matrix, Matrix>> Utility::get_Batches(const Matrix& x_vals, const Matrix& y_vals, int size) {
         if(size > x_vals.get_Size().rows) {
             std::cout << "Batchsize grösser als Trainigsdaten" << std::endl;
@@ -39,39 +43,214 @@
         return y_result;
     }
 
-    Q_R_Matrizen Utility::tridiagonalize_symmetric_Matrix(Matrix& matrix) {
-        if(matrix.get_Size().rows < 3) std::cout << "Matrix zu klein um zu tridiagonalisieren" << std::endl;
+    TridiagonalResult Utility::tridiagonalize_symmetric_Matrix(Matrix& matrix) {
+        if(matrix.get_Size().rows < 3) throw std::invalid_argument("Matrix zu klein um zu tridiagonalisieren");
         // isngesamt n-2 iterationen
-
+        
         std::size_t size = matrix.get_Size().rows;
-        for(std::size_t i = 0; i < size - 2; ++i) {
-            double* x = (matrix.data() + i * size + (i + 1));
-            int len = size - i - 1;
-            double alpha; // Hier morgen weiter 
+        std::vector<double> sub_diagonal(size-1);
+        std::vector<double> taus(size > 2 ? size - 2 : 0);
+        std::vector<double> v(size), p(size), w(size);
+        double* A = matrix.data();
+        double a_i;
+        for (std::size_t i = 0; i + 2 < size; ++i) {
+            double* x = A + i * size + (i + 1);
+            std::size_t len = size - i - 1;
+            taus[i] = householder(x, static_cast<int>(len), &a_i);
+            sub_diagonal[i] = a_i;
+            double tau = taus[i];
+            if (tau == 0.0) continue;
+
+            v[0] = 1.0;
+            for (std::size_t k = 1; k < len; ++k) v[k] = x[k];
+
+            double* B = A + (i + 1) * size + (i + 1);
+
+            for (std::size_t r = 0; r < len; ++r) p[r] = 0.0;
+            for (std::size_t r = 0; r < len; ++r) {
+                const double* row = B + r * size;
+                p[r] += row[r] * v[r];
+                for (std::size_t c = r + 1; c < len; ++c) {
+                    p[r] += row[c] * v[c];
+                    p[c] += row[c] * v[r];
+                }
+            }
+            double pv = 0.0;
+            for (std::size_t r = 0; r < len; ++r) { p[r] *= tau; pv += p[r] * v[r]; }
+
+            for (std::size_t r = 0; r < len; ++r) w[r] = p[r] - 0.5 * tau * pv * v[r];
+
+            for (std::size_t r = 0; r < len; ++r) {
+                double* row = B + r * size;
+                for (std::size_t c = r; c < len; ++c)
+                    row[c] -= v[r] * w[c] + w[r] * v[c];
+            }
         }
+        sub_diagonal[size-2] = A[(size-2) * size + (size - 1)];
+        std::vector<double> diag = matrix.get_Diagonal_Vector();
+        return {sub_diagonal, diag, taus, std::move(matrix)};
 
     }
 
-    void householder(double* x, int len, double* alpha, double* v, double* tau) {
+    double householder(double* x, int len, double* a) {
         double tail = 0.0;
         for (int i = 1; i < len; ++i) tail += x[i] * x[i];
 
-        if (tail == 0.0) {            // nichts zu nullen
-            *tau = 0.0;
-            *alpha = x[0];
-            v[0] = 1.0;
-            for (int i = 1; i < len; ++i) v[i] = 0.0;
-            return;
-        }
+        *a = x[0];
+        if (tail == 0.0) return 0.0;              
 
         double x0 = x[0];
-        *alpha = - std::copysign(1.0, x0) * std::sqrt(x0 * x0 + tail);
-        *tau = (*alpha - x0) / *alpha;
-        double scale = 1.0 / (x0 - *alpha);
+        double alpha = -std::copysign(1.0, x0) * std::sqrt(x0 * x0 + tail);
+        *a = alpha;
+        double tau = (alpha - x0) / alpha;
+        double scale = 1.0 / (x0 - alpha);
 
-        v[0] = 1.0;
-        for (int i = 1; i < len; ++i) v[i] = x[i] * scale;
+        for (int i = 1; i < len; ++i) x[i] *= scale;   
+        x[0] = alpha;                                
+        return tau;
     }
+
+    EigenResult Utility::implicit_QR_shift(std::vector<double>& diag, std::vector<double>& sub_diag) {
+        std::size_t size = diag.size()-1;
+        const std::size_t n = diag.size();
+        double epsilon = std::numeric_limits<double>::epsilon();
+        Matrix result = Matrix::identity(size+1);
+        double* result_daten = result.data();
+        std::size_t max_iter = 0;
+        while(size > 0) {
+            if(max_iter > 30 * diag.size() * 2)  throw std::runtime_error("QR-Iteration konvergiert nicht");
+            max_iter++;
+
+            for (std::size_t k = 0; k < size; ++k) {
+                if (std::abs(sub_diag[k]) <= epsilon * (std::abs(diag[k]) + std::abs(diag[k+1])))
+                    sub_diag[k] = 0.0;
+            }
+
+            if (sub_diag[size-1] == 0.0) { --size; continue; }
+
+            std::size_t l = size - 1;
+            while (l > 0 && sub_diag[l-1] != 0.0) --l;
+            
+            //erster schritt
+            //eigenwert bestimmen
+            double a = diag[size-1];
+            double d = diag[size];
+            double b = sub_diag[size-1];          // Index prüfen, siehe oben
+
+            double delta = (a - d) / 2;
+            double sgn = (delta >= 0.0) ? 1.0 : -1.0;
+            double mu = d - sgn * b * b / (std::abs(delta) + std::hypot(delta, b));
+
+            // Iteration über die Matrix mit bulge
+            // bulge muss noch berechnet werden
+            double bulge = 0.0, c, s, r, a_giv; // Bulge, c s r und a von givens
+            //Erster schritt Bulge erstellen
+            a_giv = diag[l]- mu;
+            r = std::hypot(a_giv, sub_diag[l]);
+            if(r == 0) {
+                c = 1.0;
+                s = 0.0;
+            }
+            else {
+                c = a_giv / r;
+                s = sub_diag[l] / r;
+            }
+            
+            double cc = c * c;
+            double ss = s * s;
+            double cs = c * s;
+            double d0 = diag[l];
+            double d1 = diag[l+1];
+            double e0 = sub_diag[l];
+
+            diag[l] = cc * d0 + 2 * cs * e0 + ss * d1;
+                    
+            diag[l+1] = ss * d0 - 2 * cs * e0 + cc * d1;
+
+            sub_diag[l] = (cc - ss) * e0 + cs * (d1 - d0);
+
+            double* zk = result_daten + l * n;
+            double* zk1 = result_daten + (l + 1) * n;
+
+            for(std::size_t j = 0; j < n; ++j) {
+                double x = zk[j], y = zk1[j];
+
+                zk[j] = c * x + s * y;
+                zk1[j] = -s * x + c * y; 
+            }
+
+            if (size >= l + 2) {
+                double e1 = c * sub_diag[l+1];
+                bulge = s * sub_diag[l+1];
+                sub_diag[l+1] = e1;
+            }
+            
+            for(std::size_t i = l; i + 1 < size ; ++i) {
+                a_giv = sub_diag[i];
+                r = std::hypot(a_giv, bulge);
+                if(r == 0) {
+                    c = 1.0;
+                    s = 0.0;
+                }
+                else {
+                    c = a_giv / r;
+                    s = bulge / r;
+                }
+                // Werte updaten, bulge muss nicht geupdated werden weil auf 0
+                sub_diag[i] = r;
+
+                // zu berechnen : subdiagonal element, zwei diagonalelemente und den bulge      
+                cc = c * c;
+                ss = s * s;
+                cs = c * s;
+                d1 = diag[i+1];
+                double d2 = diag[i+2];
+                double e1 = sub_diag[i+1];
+
+                diag[i+1] = cc * d1 + 2 * cs * e1 + ss * d2;
+                    
+                diag[i+2] = ss * d1 - 2 * cs * e1 + cc * d2;
+
+                sub_diag[i+1] = (cc - ss) * e1 + cs * (d2 - d1);
+                
+                if(i + 2 < size ) {
+                    // nur wenn neue bulge entsteht
+                    
+                    double e2 = c * sub_diag[i+2];
+                    
+                    bulge = s * sub_diag[i+2]; 
+
+                    sub_diag[i+2] = e2;
+                }
+                // Matrix update
+
+                double* zk = result_daten + (i + 1) * n;
+                double* zk1 = result_daten + (i + 2) * n;
+                for(std::size_t j = 0; j < n ; ++j) {
+                    double x = zk[j], y = zk1[j];
+
+                    zk[j] = c * x + s * y;
+                    zk1[j] = -s * x + c * y;
+                }
+            }
+        }
+
+        std::vector<std::size_t> idx(n);
+        std::iota(idx.begin(), idx.end(), 0);
+        std::sort(idx.begin(), idx.end(), [&] (std::size_t p, std::size_t q) {return diag[p] > diag[q];});
+
+        std::vector<double> d_sorted(n);
+        Matrix sorted = Matrix::identity(n);
+        double* s_data = sorted.data();
+        for(std::size_t k = 0; k < n; ++k) {
+            d_sorted[k] = std::sqrt(std::max(0.0, diag[idx[k]])); // Vielleicht später mal ändern wenn der code nicht nur für die covarianz matrix funktionieren soll
+            std::copy(result_daten + idx[k] * n, result_daten + (idx[k] + 1) * n, s_data + k * n);
+        }
+
+
+        return EigenResult{d_sorted, sorted};
+    }
+
 
 
 

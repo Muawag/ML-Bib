@@ -4,10 +4,13 @@
 #include <vector>
 #include <string>
 #include <cmath>
+#include "Utility.h"
 
 double norm2(const std::vector<double>& vec);
 void make_SingWert_pos(Matrix& U, Matrix& diag);
 void cleanup_order(SVD_Matrizen& matricies);
+Matrix get_small_Covariance(const Matrix& m);
+std::size_t get_k_value(const std::vector<double>& sing_values, const double threshould);
 
 Q_R_Matrizen SVD::q_r_step_spalte(Matrix& m){
     std::vector<double> a = m.get_Column(0);
@@ -231,8 +234,40 @@ Q_R_Matrizen SVD::q_r_Decomposition(const Matrix& matrix) {
 
 }
 
-SVD_Matrizen SVD::svd_gramm(Matrix& m) {
+std::tuple<const Matrix, const std::vector<double>> SVD::svd_gramm_for_pca(const Matrix& m, const double threshold, bool* flat) {
+    *flat = (m.get_Size().rows < m.get_Size().cols);
     Matrix covariance = get_small_Covariance(m); 
+    auto[subdiagonal, diagonal, taus, reflectors] = Utility::tridiagonalize_symmetric_Matrix(covariance);
+    auto[singvalues, matrix] = Utility::implicit_QR_shift(diagonal, subdiagonal);
+
+
+    double* A = reflectors.data();
+    double* sorted_data = matrix.data();
+    const std::size_t n = diagonal.size();
+
+    std::size_t k = get_k_value(singvalues, threshold);
+
+    for (std::size_t row = 0; row < k; ++row) {        // k gewünschte Eigenvektoren
+        double* z = sorted_data + row * n;
+        for (std::size_t ii = n - 2; ii-- > 0; ) {      // i = n-3 ... 0
+            double tau = taus[ii];
+            if (tau == 0.0) continue;
+            const double* v = A + ii * n + (ii + 2);
+            std::size_t len = n - ii - 1, r0 = ii + 1;
+            double s = z[r0];
+            for (std::size_t t = 1; t < len; ++t) s += v[t-1] * z[r0 + t];
+            s *= tau;
+            z[r0] -= s;
+            for (std::size_t t = 1; t < len; ++t) z[r0 + t] -= s * v[t-1];
+        }
+    
+    }
+    Matrix U_t(Matrix_Size{static_cast<int>(k), static_cast<int>(n)});
+    std::copy(sorted_data, sorted_data + k * n, U_t.data());
+    std::vector<double> sing_k(k);
+    std::copy(singvalues.begin(), singvalues.begin() + k, sing_k.begin());
+    std::cout << "Gramm Size. " << U_t.get_Size() << std::endl;
+    return {U_t.transpose(), sing_k};
 }
 
 Matrix get_small_Covariance(const Matrix& m) { // Hier wird gerade noch das doppelte berechnet, wenn man also will könnte man das optimieren damit nur noch eine hälfte berechnet wird
@@ -243,5 +278,18 @@ Matrix get_small_Covariance(const Matrix& m) { // Hier wird gerade noch das dopp
 }
 
 
+std::size_t get_k_value(const std::vector<double>& sing_values, const double threshold) {
+    double total = 0.0;
+    for(double val : sing_values) {
+        total += val * val;
+    }
 
+    double cumsum = 0.0;
+    double target = threshold * total;
+    for(std::size_t i = 0; i < sing_values.size(); ++i) {
+        cumsum += sing_values[i] * sing_values[i];
+        if(cumsum >= target) return i+1;
+    }
+    return sing_values.size();
+}
  

@@ -9,8 +9,8 @@
 
 class CSVLoader {
     public:
-        static DataMatrix load_CSV(const std::string path, bool header_vorhanden = true);
-        static DataMatrix load_CSV(const std::string path, const std::vector<std::string>& header);
+        static DataMatrix load_CSV(const std::string path, bool header_vorhanden = true, char sep = ',');
+        static DataMatrix load_CSV(const std::string path, const std::vector<std::string>& header, char sep = ',');
 };
 
-std::vector<std::vector<std::string>> get_CSV_as_Matrix(const std::string path);
+std::vector<std::vector<std::string>> get_CSV_as_Matrix(const std::string path, char sep);

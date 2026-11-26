@@ -9,11 +9,14 @@
 #include <map>
 #include <stdexcept>
 #include "Q_R_Matrizen.h"
+#include "TridiagResult.h"
+#include <numeric>
+
 
 class Utility {
     public:
         static std::vector<std::pair<Matrix, Matrix>> get_Batches(const Matrix& x_vals, const Matrix& y_vals, int size);
-        static Q_R_Matrizen tridiagonalize_symmetric_Matrix(Matrix& matrix);
+        static TridiagonalResult tridiagonalize_symmetric_Matrix(Matrix& matrix);
         template<typename T>
         static std::tuple<Matrix, std::map<T, int>, std::map<int, T>, int> y_DataMatrix_Converter(const DataMatrix& y_daten) {
             Matrix result(y_daten.get_Size());
@@ -51,4 +54,6 @@ class Utility {
 
 
         static Matrix prepare_SVM_Matrix(const Matrix& labels, const int index); 
+        
+        static EigenResult implicit_QR_shift(std::vector<double>& diag, std::vector<double>& sub_diag);
 };
