@@ -18,10 +18,10 @@ class ImageLoader{
         
 
 
-        Matrix loadImagesFromCSV(std::string csvPath,std::string folder, int channels,int idColumn, int imageColumn){
+        Matrix loadImagesFromCSV(std::string csvPath,std::string folder, int channels,int idColumn, int imageColumn, char sep){
             int x,y,n;
             std::ifstream csv(csvPath);
-            std::vector<std::vector<std::string>> CSVgrid =get_CSV_as_Matrix(csvPath);  // write csv into grid
+            std::vector<std::vector<std::string>> CSVgrid =get_CSV_as_Matrix(csvPath, sep);  // write csv into grid
             std::vector<std::vector<double>> Matrixgrid;
             
             std::cout<<"b"<<std::endl;
