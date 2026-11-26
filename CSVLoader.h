@@ -12,3 +12,5 @@ class CSVLoader {
         static DataMatrix load_CSV(const std::string path, bool header_vorhanden = true);
         static DataMatrix load_CSV(const std::string path, const std::vector<std::string>& header);
 };
+
+std::vector<std::vector<std::string>> get_CSV_as_Matrix(const std::string path);
