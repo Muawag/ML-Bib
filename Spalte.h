@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include "Column_Type.h"
 #include <memory>
+#include <functional>
 
 
 template<typename T>
@@ -232,6 +233,11 @@ class TypedSpalte : public Spalte {
             return std::make_unique<TypedSpalte<T>>(std::move(result), column_type);
         }
 
+        void apply_all(std::function<void(T)> func) {
+            for(T eintrag : daten_) {
+                func(eintrag);
+            }
+        }
 
 
     private:

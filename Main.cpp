@@ -15,6 +15,7 @@
 #include "PCAFast.h"
 #include <chrono>
 #include "ImageLoader.h"
+#include <print>
 
 int main() {
     /*
@@ -33,7 +34,7 @@ int main() {
     StandartScaler scaler;
     Matrix x_scaled_train = scaler.train_apply(x_daten_train);
     Matrix x_scaled_test = scaler.apply(x_daten_test);
-    PCA pca;
+    PCAFast pca;
     Matrix pca_x_train = pca.train_apply(x_scaled_train);
     Matrix pca_x_test = pca.apply(x_scaled_test);
     //pca_x_train.print_Matrix();
@@ -184,17 +185,29 @@ PCAFast pca;
 Matrix pcaMat = pca.train_apply(scaled);*/
 
 
-DataMatrix d = CSVLoader::load_CSV("Auswertung.csv", true, ';');
-DataMatrix spec = d.get_Spalte_as_Matrix_and_Drop("Species");
+//DataMatrix d = CSVLoader::load_CSV("Auswertung.csv", true, ';');
+//DataMatrix spec = d.get_Spalte_as_Matrix_and_Drop("Species");
 //spec.print_Matrix();
 
-Matrix image_matrix = ImageLoader::loadImagesFromCSV("Auswertung.csv", "C:/MLProjektBilder/Bat_Orientation_Calls",3, 1, 0, ';');
+//std::map<std::string, int> amount;
+
+//auto count = [&amount](std::string type) {++amount[type];};
+
+//spec.get_Spalte<std::string>("Species")->apply_all(count);
+
+//std::println("{}", amount);
+
+//Matrix image_matrix = ImageLoader::loadImagesFromCSV("Auswertung.csv", "D:/Daten/Bat_Orientation_Calls/Bat_Orientation_Calls",3, 1, 0, ';');
 
 //std::cout << image_matrix.get_Size() << std::endl;
 
-auto[x_train, x_test, y_train, y_test] = TrainTestSplit::split(image_matrix, spec, 0.7, "Species");
+//auto[x_train, x_test, y_train, y_test] = TrainTestSplit::split(image_matrix, spec, 0.7, "Species");
 
+//amount.clear();
+//y_test.get_Spalte<std::string>("Species")->apply_all(count);
 
+//std::println("{}", amount);
+/*
 StandartScaler scaler;
 Matrix x_train_scaled = scaler.train_apply(x_train);
 Matrix x_test_scaled = scaler.apply(x_test);
@@ -210,11 +223,26 @@ std::cout << x_train_pca.get_Size() << std::endl;
     DataMatrix test_res_vec_svm = svm.predict(x_test_pca);
 
     std::cout << "Accuracy SVM: " << Metrik::accuracy(y_test, test_res_vec_svm) << std::endl;
-    test_res_vec_svm.print_Matrix();*/
+    test_res_vec_svm.print_Matrix();
 
     LogisticRegression<std::string> logReg(5000, 0.01, 42);
     logReg.train(x_train_pca, y_train);
     DataMatrix test_res_vec_log = logReg.predict(x_test_pca);
 
-    std::cout << "Accuracy LogReg: " << Metrik::accuracy(y_test, test_res_vec_log) << std::endl;
+    std::cout << "Accuracy LogReg: " << Metrik::accuracy(y_test, test_res_vec_log) << std::endl;*/
+
+std::mt19937 gen(42);
+std::uniform_real_distribution<double> dist(-1.0, 1.0);
+
+// {rows, d, l}
+int sizes[][3] = {{7,3,5}, {8,4,8}, {200,17,9}, {5,200,10}, {300,300,300}};
+
+for (auto& s : sizes) {
+    Matrix A = Matrix::get_Matrix_with_random({s[0], s[1]}, gen, dist);
+    Matrix B = Matrix::get_Matrix_with_random({s[0], s[2]}, gen, dist);  // auch s[0] Zeilen
+
+    std::cout << Matrix::max_matrix_diff(
+        Matrix::transposed_mult(A, B),
+        Matrix::old_mult(A.transpose(), B)) << '\n';
+}
 }

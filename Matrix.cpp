@@ -17,16 +17,16 @@ void AddDot8x4(int, const double*, const double*, double*, int);
 
 void PackMatrixA( int, const double*, int, double*);
 
-void PackMatrixB( int, const double*, int, double*);
+void PackMatrixB( int, const double*, int, int, double*);
 
 void InnerKernel(int, int, int, const double*, int, const double*, double*, int);
 
 void MY_MMult(int , int , int ,
               const double *, int ,
-              const double *, int ,
+              const double *, int , int, 
               double *, int );
 
-void Fast_MY_MMult(int, int, int, const double *, int, const double *, int, double *, int);
+void Fast_MY_MMult(int, int, int, const double *, int, const double *, int, int, double *, int);
 
 struct MatView {
     double *p;
@@ -149,7 +149,7 @@ Matrix Matrix::operator*(const Matrix& m2) const {
 
     MY_MMult(n, m, k,
              m2.matrix_as_vec.data(), n,             
-             matrix_as_vec.data(), k,                
+             matrix_as_vec.data(), 1, k,                
              C.matrix_as_vec.data(), n);           
     return C;
 }
@@ -437,15 +437,8 @@ int Matrix::ld() const {
     return size_.rows;
 }
 
-double& Matrix::operator()(int i, int j) {
-    return matrix_as_vec[ j * size_.rows + i];
-}
 
-double Matrix::operator()(int i, int j) const {
-    return matrix_as_vec[ j * size_.rows + i];
-}
-
-void PackMatrixB(int k, const double *b, int ldb, double *b_to) {
+/*void PackMatrixB(int k, const double *b, int ldb, double *b_to) {
 	int i;
 	const double
 		*b_i0_pntr = &b[0 * ldb], *b_i1_pntr = &b[1 * ldb],
@@ -457,6 +450,12 @@ void PackMatrixB(int k, const double *b, int ldb, double *b_to) {
 			*b_to++ = *b_i2_pntr++;
 			*b_to++ = *b_i3_pntr++;
 		}
+}*/
+
+void PackMatrixB(int k, const double* b, int rsb, int csb, double* b_to) {
+    for (std::ptrdiff_t p = 0; p < k; ++p)
+        for (std::ptrdiff_t j = 0; j < 4; ++j)
+            *b_to++ = b[p * rsb + j * csb];
 }
 
 void InnerKernel(int m, int n, int k,
@@ -480,7 +479,7 @@ constexpr int kc = 128;
 
 void Fast_MY_MMult(int m, int n, int k,
               const double *a, int lda,
-              const double *b, int ldb,
+              const double *b, int rsb, int csb,
               double *c, int ldc)
 {
     for (int p = 0; p < k; p += kc) {
@@ -488,9 +487,12 @@ void Fast_MY_MMult(int m, int n, int k,
     std::vector<double> packedB(pb * n);
     
     //#pragma omp parallel for schedule(static)
-    for (int j = 0; j < n; j += 4)
-        PackMatrixB(pb, &b[j * ldb + p], ldb, &packedB[j * pb]);
+    //for (int j = 0; j < n; j += 4)
+    //    PackMatrixB(pb, &b[j * ldb + p], ldb, &packedB[j * pb]);
 
+    for (int j = 0; j < n; j += 4)
+    PackMatrixB(pb, &b[(std::ptrdiff_t)p * rsb + (std::ptrdiff_t)j * csb],
+                rsb, csb, &packedB[(std::ptrdiff_t)j * pb]);
     //#pragma omp parallel for schedule(dynamic)
     for (int i = 0; i < m; i += mc) {
         int ib = std::min(m - i, mc);
@@ -500,18 +502,18 @@ void Fast_MY_MMult(int m, int n, int k,
 }
 }
 
-void MY_MMult(int m, int n, int k, const double *a, int lda, const double *b, int ldb, double *c, int ldc) {
+void MY_MMult(int m, int n, int k, const double *a, int lda, const double *b, int rsb, int csb, double *c, int ldc) {
     int m8 = m - m%8;
     int n4 = n - n%4;
     
     if(m8 > 0 && n4 > 0) {
-        Fast_MY_MMult(m8, n4, k, a, lda, b, ldb, c, ldc);
+        Fast_MY_MMult(m8, n4, k, a, lda, b, rsb, csb, c, ldc);
     }
 
         for (int j = n4; j < n; ++j) {
             for (int p = 0; p < k; ++p) {
                 for (int i = 0; i < m; ++i) {
-                    c[j*ldc + i] += a[p*lda + i] * b[j*ldb + p];
+                    c[j*ldc + i] += a[p*lda + i] * b[p*rsb + j*csb];
                 }
             }
         }
@@ -519,7 +521,7 @@ void MY_MMult(int m, int n, int k, const double *a, int lda, const double *b, in
     for (int j = 0; j < n4; ++j) {
         for (int p = 0; p < k; ++p) {
             for (int i = m8; i < m; ++i) {
-                c[j*ldc + i] += a[p*lda + i] * b[j*ldb + p];
+                c[j*ldc + i] += a[p*lda + i] * b[p*rsb + j*csb];
             }
         }
     }
@@ -597,4 +599,21 @@ void AddDot8x4(int k, const double *a, const double *b, double *c, int ldc) {
     _mm256_storeu_pd(c2 + 4, _mm256_add_pd(_mm256_loadu_pd(c2 + 4), c12));
     _mm256_storeu_pd(c3,     _mm256_add_pd(_mm256_loadu_pd(c3),     c03));
     _mm256_storeu_pd(c3 + 4, _mm256_add_pd(_mm256_loadu_pd(c3 + 4), c13));
+}
+
+Matrix Matrix::transposed_mult(const Matrix& A, const Matrix& B) {
+    if (A.get_Size().rows != B.get_Size().rows) {
+        throw std::runtime_error("A und B muessen gleich viele Zeilen haben");
+    }
+    const int rows = static_cast<int>(A.get_Size().rows);
+    const int d = static_cast<int>(A.get_Size().cols);
+    const int l = static_cast<int>(B.get_Size().cols);
+
+    Matrix Z(d, l);   // mit 0 initialisiert
+
+    MY_MMult(l, d, rows,
+             B.data(), l,        // a, lda
+             A.data(), d, 1,     // b, rsb, csb
+             Z.data(), l);       // c, ldc
+    return Z;
 }

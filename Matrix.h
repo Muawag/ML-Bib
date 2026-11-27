@@ -9,6 +9,7 @@
 #include <random>
 #include <chrono>
 #include <immintrin.h>
+#include <cstddef>
 
 
 class Matrix {
@@ -32,7 +33,7 @@ class Matrix {
         static Matrix get_Upper_Trig_From_Vec(const std::vector<std::vector<double>>& rows, const Matrix_Size& size);
         static Matrix old_mult(const Matrix& a, const Matrix& b);
         static double max_matrix_diff(const Matrix& a, const Matrix& b);
-
+        static Matrix transposed_mult(const Matrix& A, const Matrix& B); // Rechnet A.transpose() * B ist gut für sehr grosse A, weil kein neuer speicher benutzt wird 
 
         Matrix operator+(const Matrix& m2) const;
         Matrix operator-(const Matrix& m2) const;
@@ -40,8 +41,6 @@ class Matrix {
         Matrix& operator-=(const Matrix& other);
         std::span<double> operator[](std::size_t index);
         std::span<const double> operator[](std::size_t index) const;
-        double& operator()(int i, int j);
-        double operator()(int i, int j) const;
         template<typename T>
         requires std::is_arithmetic_v<T>
         Matrix operator*(T scalar) const {
