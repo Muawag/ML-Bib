@@ -7,8 +7,6 @@
 #include <algorithm>
 #include <functional>
 #include "Matrix_Size.h"
-#include "NumberDataMatrix.h"
-
 
 class DataMatrix {
     public:
