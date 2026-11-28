@@ -16,9 +16,10 @@
 #include <chrono>
 #include "ImageLoader.h"
 #include <print>
+#include "KNN_Classifier.h"
 
 int main() {
-    /*
+    
     DataMatrix csv_matrix = CSVLoader::load_CSV("iris.csv");
     //csv_matrix.print_Matrix();
     //csv_matrix.one_hot_encode("species", {"setosa"});
@@ -45,7 +46,23 @@ int main() {
     DataMatrix test_res_vec_log = logReg.predict(pca_x_test);
 
     std::cout << "Accuracy LogReg: " << Metrik::accuracy(predict_y_test, test_res_vec_log) << std::endl;
+
+    auto euclidean = [](const double* x1, const double* x2, std::size_t cols) {
+        double dist = 0.0;
+        for(std::size_t i = 0; i < cols; ++i) {
+            dist += (x1[i] - x2[i]) * (x1[i] - x2[i]); 
+        }
+        return std::sqrt(dist);
+    };
+
+    KNN_Classifier<std::string> knn(5, euclidean);
+
+    knn.train(pca_x_train, predict_y);
+    DataMatrix test_vec_knn = knn.predict(pca_x_test);
+
+    std::cout << "Accuracy KNN: " << Metrik::accuracy(predict_y_test, test_vec_knn) << std::endl;
     
+    /*
     DataMatrix cutouts = CSVLoader::load_CSV("cutouts.csv", false);
     auto[train_daten, test_daten] = TrainTestSplit::split(cutouts, 0.8, "3072");
     DataMatrix predict_y_train = train_daten.get_Spalte_as_Matrix_and_Drop("3072");
@@ -231,18 +248,4 @@ std::cout << x_train_pca.get_Size() << std::endl;
 
     std::cout << "Accuracy LogReg: " << Metrik::accuracy(y_test, test_res_vec_log) << std::endl;*/
 
-std::mt19937 gen(42);
-std::uniform_real_distribution<double> dist(-1.0, 1.0);
-
-// {rows, d, l}
-int sizes[][3] = {{7,3,5}, {8,4,8}, {200,17,9}, {5,200,10}, {300,300,300}};
-
-for (auto& s : sizes) {
-    Matrix A = Matrix::get_Matrix_with_random({s[0], s[1]}, gen, dist);
-    Matrix B = Matrix::get_Matrix_with_random({s[0], s[2]}, gen, dist);  // auch s[0] Zeilen
-
-    std::cout << Matrix::max_matrix_diff(
-        Matrix::transposed_mult(A, B),
-        Matrix::old_mult(A.transpose(), B)) << '\n';
-}
 }

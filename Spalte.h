@@ -65,6 +65,9 @@ class TypedSpalte : public Spalte {
         std::vector<T>* get_Raw() {
             return daten_;
         }
+        std::vector<T>& get_Raw_Vec() {
+            return daten_;
+        }
         bool is_Number() const override {
             if constexpr (std::is_arithmetic_v<T>) {
                 return true;
